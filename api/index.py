@@ -47,7 +47,7 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
 print(f"Supabase Client initialized for URL: {SUPABASE_URL}")
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
 
 def allowed_file(filename):
     return '.' in filename and \
