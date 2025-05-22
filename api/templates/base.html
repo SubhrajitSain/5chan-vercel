@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>5chan.fr - {% block title %}{% endblock %}</title>
+    <title>5chan - {% block title %}{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.png') }}">
     <meta name="title" content="5chan (for real)">
@@ -17,7 +17,7 @@
 </head>
 <body>
     <header>
-        <h1><a href="{{ url_for('index') }}">5chan.fr</a></h1>
+        <h1><a href="{{ url_for('index') }}">5chan</a></h1>
         <nav>
             <a href="{{ url_for('index') }}">Home</a>
             {% if session.get('user_id') %}
