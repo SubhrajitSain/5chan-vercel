@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}/{{ board_name }}/{% endblock %}
+
+{% block content %}
+    <h2>Welcome to /{{ board_name }}/</h2>
+    <p>{{ board_obj.description }}</p>
+    <a href="{{ url_for('create_post', board_name=board_name) }}">Create New Post</a><br><br>
+
+    <div class="post-list">
+        {% if posts %}
+            {% for post in posts %}
+                <div class="post">
+                    {% if post.is_nsfw %}
+                        <p class="nsfw-warning">
+                            This post is marked as NSFW. You can still
+                            <a href="{{ url_for('view_post', post_id=post._id) }}">view the post anyway</a>.
+                        </p>
+                    {% else %}
+                        <h3><a href="{{ url_for('view_post', post_id=post._id) }}">{{ post.title }}</a></h3>
+                        <p class="post-meta">Posted by <strong>{{ post.author_username }}</strong> on {{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                        <p>{{ post.content }}</p>
+                        {% if post.image_url %}
+                            <img src="{{ post.image_url }}" alt="Post Image" class="post-image">
+                        {% endif %}
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No posts yet in /{{ board_name }}/. Be the first to create one!</p>
+        {% endif %}
+    </div>
+{% endblock %}

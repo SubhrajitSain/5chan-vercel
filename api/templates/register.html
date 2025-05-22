@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+    <h2>Register for 5chan</h2>
+    <form action="{{ url_for('register') }}" method="POST">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required><br>
+
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required><br>
+
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required><br>
+        
+        <div class="form-group checkbox-group">
+            <input type="checkbox" id="terms" name="terms" required>
+            <label for="terms">I agree to the <a href="{{ url_for('tos') }}">Terms of Service</a></label>
+        </div>
+
+        <div class="form-group checkbox-group">
+            <input type="checkbox" id="rules" name="rules" required>
+            <label for="rules">I agree to the <a href="{{ url_for('rules') }}">Rules</a></label>
+        </div>
+
+        <button type="submit">Register</button>
+        <p>Please note that you cannot change these details later.</p>
+        <p>You can submit a request to change your details or delete your account by contacting us.</p>
+    </form>
+    <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a>.</p>
+{% endblock %}

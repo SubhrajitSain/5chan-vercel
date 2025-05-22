@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Create New Board{% endblock %}
+
+{% block content %}
+    <h2>Create New Board</h2>
+    <form action="{{ url_for('create_board') }}" method="POST">
+        <label for="name">Board Name (e.g., 'random', 'tech'):</label>
+        <input type="text" id="name" name="name" required pattern="[a-zA-Z0-9]+" title="Only alphanumeric characters allowed"><br>
+
+        <label for="description">Board Description:</label>
+        <textarea id="description" name="description" rows="5" required></textarea><br>
+
+        <button type="submit">Create Board</button>
+    </form>
+{% endblock %}

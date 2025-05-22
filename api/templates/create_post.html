@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Create Post in /{{ board_name }}/{% endblock %}
+
+{% block content %}
+    <h2>Create New Post in /{{ board_name }}/</h2>
+    <form action="{{ url_for('create_post', board_name=board_name) }}" method="POST" enctype="multipart/form-data">
+        <label for="title">Title (Optional):</label>
+        <input type="text" id="title" name="title" maxlength="100">
+
+        <label for="content">Content (Max 75 chars):</label>
+        <textarea id="content" name="content" rows="5" required maxlength="75"></textarea>
+
+        <label for="file">Image (Optional):</label>
+        <input type="file" id="file" name="file" accept="image/*">
+
+        <div class="form-group checkbox-group">
+            <input type="checkbox" id="is_nsfw" name="is_nsfw">
+            <label for="is_nsfw">Mark as NSFW</label>
+        </div>
+
+        <button type="submit">Create Post</button>
+    </form>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }}{% endblock %}
+
+{% block content %}
+    <div class="post-detail">
+        <h2>
+            {{ post.title }}
+            {% if post.is_nsfw %}
+                <span class="nsfw-tag">NSFW</span>
+            {% endif %}
+        </h2>
+        <p class="post-meta">Posted by <strong>{{ post.author_username }}</strong> on {{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+        <p class="post-content-full">{{ post.content }}</p>
+        {% if post.image_url %}
+            <img src="{{ post.image_url }}" alt="Post Image" class="post-image-full">
+        {% endif %}
+    </div>
+
+    <div class="comments-section">
+        <h4>Comments</h4>
+        <form action="{{ url_for('comment_on_post', post_id=post._id) }}" method="POST">
+            <label for="content">Add a comment (Max 75 chars):</label>
+            <textarea id="content" name="content" rows="3" required maxlength="75"></textarea>
+            <button type="submit">Post Comment</button>
+        </form>
+
+        {% if comments %}
+            {% for comment in comments %}
+                <div class="comment">
+                    <p class="comment-meta">Comment by <strong>{{ comment.commenter_username }}</strong> on {{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                    <p>{{ comment.content }}</p>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No comments yet. Be the first to comment!</p>
+        {% endif %}
+    </div>
+{% endblock %}

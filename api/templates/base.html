@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5chan.fr - {% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.png') }}">
+    <meta name="title" content="5chan (for real)">
+    <meta name="description" content="Join 5chan.fr to discuss various topics, share ideas, and connect with a vibrant community. Create boards, post content, and engage in discussions.">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://5chan.fr/">
+    <meta property="og:title" content="5chan (for real)">
+    <meta property="og:description" content="Join 5chan.fr to discuss various topics, share ideas, and connect with a vibrant community. Create boards, post content, and engage in discussions.">
+    <meta property="og:image" content="{{ url_for('static', filename='favicon-256.png', _external=True) }}"> {# Updated image #}
+</head>
+<body>
+    <header>
+        <h1><a href="{{ url_for('index') }}">5chan.fr</a></h1>
+        <nav>
+            <a href="{{ url_for('index') }}">Home</a>
+            {% if session.get('user_id') %}
+                <a href="{{ url_for('create_board') }}">Create Board</a>
+                <a href="{{ url_for('chat') }}">Live Chat</a>
+                <a href="{{ url_for('logout') }}">Logout {{ session.get('username', 'User') }}</a>
+            {% else %}
+                <a href="{{ url_for('register') }}">Register</a>
+                <a href="{{ url_for('login') }}">Login</a>
+            {% endif %}
+            <a href="{{ url_for('about') }}">About</a>
+            <a href="{{ url_for('rules') }}">Rules</a>
+            <a href="{{ url_for('tos') }}">TOS</a>
+        </nav>
+    </header>
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flash-messages">
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
