@@ -1,0 +1,439 @@
+* {
+    font-family: 'monospace', 'Courier New', Courier, monospace !important;
+}
+
+body {
+    background-color: #1A0D3E; /* Very Dark Purple */
+    color: #E0E0E0; /* Light Gray text */
+    margin: 0;
+    padding: 0;
+    height: 100%; /* Ensure body takes full height for sticky footer */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Make sure it's at least the viewport height */
+}
+
+.container {
+    flex: 1; /* Allows container to grow and push footer down */
+    max-width: 960px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #2F195F; /* Slightly lighter purple for content areas */
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+}
+
+header {
+    background-color: #11082A; /* Even darker purple for header */
+    color: white;
+    padding: 15px 0;
+    text-align: center;
+    border-bottom: 3px solid #4F2E8A; /* Medium purple accent */
+}
+
+header h1 {
+    margin: 0;
+    font-size: 2.5em;
+}
+
+header h1 a {
+    color: #FFB22B;
+    text-decoration: none;
+}
+
+nav {
+    text-align: center;
+    margin-top: 10px;
+}
+
+nav a,
+nav a:visited {
+    color: #FFB22B; /* Orange/Yellow for links */
+    text-decoration: none;
+    margin: 0 15px;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+nav a:hover {
+    color: #FFD280; /* Lighter orange on hover */
+}
+
+/* Ensure all a tags get the specified link color unless overridden */
+a {
+    color: #FFB22B;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #FFD280;
+    text-decoration: underline;
+}
+
+.flash-messages {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+}
+
+.flash-messages li {
+    padding: 10px;
+    margin-bottom: 5px;
+    border-radius: 4px;
+}
+
+.flash-messages .success {
+    background-color: #4CAF50; /* Green */
+    color: white;
+}
+
+.flash-messages .error {
+    background-color: #F44336; /* Red */
+    color: white;
+}
+
+.flash-messages .warning {
+    background-color: #FFC107; /* Amber */
+    color: black;
+}
+
+.flash-messages .info { /* Added .info category */
+    background-color: #17a2b8; /* Blue */
+    color: white;
+}
+
+/* Board List */
+.board-list {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.board-list li {
+    background-color: #4F2E8A; /* Purple for board cards */
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    flex: 1 1 calc(33% - 30px); /* 3 columns with gap */
+    box-sizing: border-box;
+    min-width: 250px;
+}
+
+.board-list li h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.board-list li p {
+    font-size: 0.9em;
+    color: #C5CAE9;
+}
+
+/* Post and Comment Styling */
+.post, .comment {
+    background-color: #3F2370; /* Medium purple for individual posts/comments */
+    border: 1px solid #5C3D92; /* Slightly lighter border */
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.post h3 {
+    color: #FFB22B; /* Link color for post titles */
+    margin-top: 0;
+}
+
+.post p, .comment p {
+    line-height: 1.6;
+    word-wrap: break-word; /* Ensure long words wrap */
+}
+
+.post-meta, .comment-meta {
+    font-size: 0.8em;
+    color: #C5CAE9; /* Light gray-blue for meta info */
+    margin-bottom: 10px;
+}
+
+.post-image {
+    max-height: 200px;
+    display: block;
+    margin-top: 10px;
+    border-radius: 4px;
+}
+
+.post-image-full {
+    max-height: 500px;
+    border-radius: 4px;
+}
+
+/* Form Styling */
+form {
+    background-color: #4F2E8A; /* Another shade of purple for forms */
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+form input[type="text"],
+form input[type="email"],
+form input[type="password"],
+form textarea {
+    width: calc(100% - 22px);
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #7D5BB4;
+    border-radius: 4px;
+    background-color: #5C3D92; /* Purple input background */
+    color: #E0E0E0;
+}
+
+form input[type="file"] {
+    margin-bottom: 15px;
+    color: #E0E0E0; /* Ensure file input text is visible */
+}
+
+form button, .button { /* .button for general links styled as buttons */
+    background-color: #6A4DB8; /* Purple button */
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s ease;
+}
+
+form button:hover, .button:hover {
+    background-color: #7D5BB4; /* Lighter purple on hover */
+}
+
+/* Specific styles for comment section */
+.comments-section {
+    margin-top: 30px;
+    border-top: 1px solid #5C3D92;
+    padding-top: 20px;
+}
+
+.comments-section h4 {
+    color: #FFB22B; /* Link color for headings */
+    margin-bottom: 15px;
+}
+
+/* Footer Styling */
+footer {
+    background-color: #11082A; /* Even darker purple for footer */
+    color: #C5CAE9; /* Light gray-blue for footer text */
+    text-align: center;
+    padding: 20px 0;
+    margin-top: 40px; /* Space above the footer */
+    font-size: 0.9em;
+    border-top: 3px solid #4F2E8A; /* Medium purple accent */
+}
+
+footer p {
+    margin: 5px 0;
+}
+
+footer a {
+    color: #FFB22B; /* Orange/Yellow for links in footer */
+    text-decoration: none;
+    margin: 0 10px;
+    transition: color 0.3s ease;
+}
+
+footer a:hover {
+    color: #FFD280; /* Lighter orange on hover */
+    text-decoration: underline;
+}
+
+/* --- Chat Specific Styles --- */
+.chat-container {
+    background-color: #3F2370;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    height: 600px; /* Fixed height for chat area */
+    max-height: 80vh;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+}
+
+.chat-messages {
+    flex-grow: 1;
+    overflow-y: auto; /* Scrollable messages */
+    padding: 10px;
+    border: 1px solid #5C3D92;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    background-color: #2F195F;
+}
+
+.chat-message {
+    margin-bottom: 8px;
+    word-wrap: break-word;
+    font-size: 0.95em;
+    padding: 5px 8px;
+    border-radius: 5px;
+    background-color: #4F2E8A; /* Default message background */
+}
+
+.chat-message strong {
+    color: #FFB22B; /* Username color */
+}
+
+.chat-message .timestamp {
+    font-size: 0.75em;
+    color: #C5CAE9;
+    margin-right: 5px;
+}
+
+.chat-message.my-message {
+    text-align: right; /* Align own messages to the right */
+    background-color: #6A4DB8; /* Different color for own messages */
+}
+
+.chat-message.system-message {
+    text-align: center;
+    color: #F44336; /* Red for system messages */
+    font-style: italic;
+    background-color: #2F195F; /* Darker background for system messages */
+    border: 1px dashed #F44336;
+}
+
+
+.chat-input-area {
+    display: flex;
+    gap: 10px;
+}
+
+.chat-input-area input[type="text"] {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #7D5BB4;
+    border-radius: 4px;
+    background-color: #5C3D92;
+    color: #E0E0E0;
+    font-size: 1em;
+}
+
+.chat-input-area input[type="text"]::placeholder {
+    color: #A0A0A0;
+}
+
+.chat-input-area button {
+    padding: 10px 20px;
+    background-color: #FFB22B; /* Orange send button */
+    color: #1A0D3E; /* Dark text on orange */
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s ease;
+}
+
+.chat-input-area button:hover {
+    background-color: #FFD280; /* Lighter orange on hover */
+}
+
+.chat-input-area button:disabled {
+    background-color: #888;
+    cursor: not-allowed;
+    color: #555;
+}
+
+/* --- NSFW Specific Styles --- */
+.nsfw-warning {
+    background-color: #5C3D92; /* A dark purple */
+    color: #FFB22B; /* Warning color */
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: bold;
+    margin: 10px 0;
+    line-height: 1.5;
+}
+
+.nsfw-warning a {
+    color: #FFD280; /* Lighter orange for the link */
+    text-decoration: underline;
+    font-weight: bold;
+}
+
+.nsfw-tag {
+    background-color: #F44336; /* Red for NSFW tag */
+    color: white;
+    padding: 4px 10px;
+    border-radius: 5px;
+    font-size: 0.8em;
+    font-weight: bold;
+    margin-left: 10px;
+    vertical-align: middle;
+    display: inline-block; /* Ensure it behaves like a tag */
+}
+
+/* Optional: Adjust post image styling on full post view if needed */
+.post-image-full {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin-top: 15px;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Adjustments for checkbox group in forms */
+.form-group.checkbox-group {
+    display: flex; /* Make it a flex container */
+    align-items: center; /* Vertically center items within the flex container */
+    margin-bottom: 15px;
+}
+
+.form-group.checkbox-group input[type="checkbox"] {
+    width: auto;
+    margin-right: 10px;
+    margin-bottom: 0;
+    /* Basic styling for checkbox */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 1px solid #7D5BB4;
+    border-radius: 3px;
+    background-color: #5C3D92;
+    cursor: pointer;
+    /* Remove vertical-align: middle; and any 'top' properties here,
+       as flexbox 'align-items: center' will handle it. */
+    /* vertical-align: middle; <-- REMOVE THIS */
+    /* position: relative; top: 2px; <-- REMOVE THESE if they are still there */
+}
+
+.form-group.checkbox-group input[type="checkbox"]:checked {
+    background-color: #FFB22B; /* Orange when checked */
+    border-color: #FFB22B;
+}
+
+.form-group.checkbox-group input[type="checkbox"]:checked::before {
+    content: '✓'; /* Checkmark */
+    display: block;
+    color: #1A0D3E; /* Dark text on orange checkmark */
+    font-size: 14px;
+    line-height: 18px; /* Ensures checkmark is vertically centered within the 18px box */
+    text-align: center;
+}
+
+.form-group.checkbox-group label {
+    margin-bottom: 0;
+    font-weight: normal;
+    cursor: pointer;
+    vertical-align: middle;
+}
