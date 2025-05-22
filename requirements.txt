@@ -1,1 +1,9 @@
-Flask==3.0.3
+Flask
+Werkzeug
+python-dotenv
+Pillow
+pymongo
+Flask-SocketIO
+python-engineio
+python-socketio
+eventlet
