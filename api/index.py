@@ -224,31 +224,43 @@ def create_post(board_name):
 
         if 'file' in request.files:
             file = request.files['file']
-            if file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                unique_filename = f"{uuid.uuid4()}_{filename}"
-                file_content = file.read()
+            if file and file.filename != '':
+                if allowed_file(file.filename):
+                    filename = secure_filename(file.filename)
+                    unique_filename = f"{uuid.uuid4()}_{filename}"
+                    file_content = file.read()
 
-                try:
-                    bucket_path = f"public/{unique_filename}"
-                    res = supabase.storage.from_(SUPABASE_BUCKET_NAME).upload(bucket_path, file_content, {"content-type": file.mimetype})
-
-                    if res.status_code == 200:
-                        print(f"Image uploaded to Supabase Storage: {bucket_path}")
-                        image_url = f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_BUCKET_NAME}/{bucket_path}"
-                        print(f"Image Public URL: {image_url}")
-                    else:
-                        flash(f"Error uploading image to Supabase: {res.json().get('error', 'Unknown error')}", "error")
-                        print(f"Supabase upload failed with status {res.status_code}: {res.text}")
+                    if not file_content:
+                        flash("Uploaded file is empty.", "error")
                         return render_template('create_post.html', board_name=board_name)
 
-                except Exception as e:
-                    flash(f"Error processing or uploading image: {e}", "error")
-                    print(f"Exception during Supabase upload: {e}")
+                    print(f"Uploading file: {unique_filename}, MIME Type: {file.mimetype}, Size: {len(file_content)} bytes")
+
+                    try:
+                        bucket_path = f"public/{unique_filename}"
+                        res = supabase.storage.from_(SUPABASE_BUCKET_NAME).upload(
+                            bucket_path,
+                            file_content,
+                            {"content-type": file.mimetype}
+                        )
+
+                        if res.status_code == 200:
+                            print(f"Image uploaded to Supabase Storage: {bucket_path}")
+                            image_url = f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_BUCKET_NAME}/{bucket_path}"
+                            print(f"Image Public URL: {image_url}")
+                        else:
+                            flash(f"Error uploading image to Supabase: {res.json().get('error', 'Unknown error')}", "error")
+                            print(f"Supabase upload failed with status {res.status_code}: {res.text}")
+                            return render_template('create_post.html', board_name=board_name)
+
+                    except Exception as e:
+                        flash(f"Error processing or uploading image: {e}", "error")
+                        print(f"Exception during Supabase upload: {e}")
+                        return render_template('create_post.html', board_name=board_name)
+                else:
+                    flash("Invalid file type.", "error")
                     return render_template('create_post.html', board_name=board_name)
-            else:
-                flash("Invalid file type or no file selected.", "error")
-                return render_template('create_post.html', board_name=board_name)
+
         try:
             new_post_data = {
                 "board_id": board_name,
