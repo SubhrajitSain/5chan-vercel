@@ -4,13 +4,12 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import uuid
 from datetime import datetime
-from PIL import Image
-import io
 import dotenv
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
 from bson.objectid import ObjectId
 from flask_socketio import SocketIO, emit, join_room, leave_room
+from supabase import create_client, Client
 
 dotenv.load_dotenv()
 
@@ -37,33 +36,22 @@ try:
 except Exception as e:
     print(f"Error connecting to MongoDB: {e}")
 
-UPLOAD_FOLDER = 'static/uploads'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+SUPABASE_BUCKET_NAME = "5chanimages"
 
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise ValueError("SUPABASE_URL and SUPABASE_KEY environment variables not set.")
+
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+print(f"Supabase Client initialized for URL: {SUPABASE_URL}")
+
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-def compress_image(image_path, quality=85):
-    try:
-        with Image.open(image_path) as img:
-            img_format = img.format
-            if img_format in ['JPG', 'JPEG', 'PNG', 'GIF']:
-                if img.mode == 'RGBA' and img_format in ['JPG', 'JPEG']:
-                    img = img.convert('RGB')
-                elif img.mode == 'P' and img_format in ['JPG', 'JPEG']:
-                    img = img.convert('RGB')
-                img.save(image_path, format=img_format, quality=quality, optimize=True)
-                print(f"DEBUG: Image compressed and saved to: {image_path}")
-            else:
-                print(f"DEBUG: Image format {img_format} not supported for specific compression or saving.")
-    except Exception as e:
-        print(f"ERROR: Could not compress image {image_path}: {e}")
 
 @app.route('/')
 def index():
@@ -154,7 +142,7 @@ def register():
             return redirect(url_for('login'))
         except Exception as e:
             flash(f"An unexpected error occurred during registration: {e}", "error")
-            print(f"DEBUG: Unexpected Exception during registration: {e}")
+            print(f"Unexpected Exception during registration: {e}")
     return render_template('register.html')
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -209,7 +197,7 @@ def create_board():
             return redirect(url_for('board', board_name=board_name))
         except Exception as e:
             flash(f"An unexpected error occurred during board creation: {e}", "error")
-            print(f"DEBUG: Unexpected Exception during board creation: {e}")
+            print(f"Unexpected Exception during board creation: {e}")
     return render_template('create_board.html')
 
 @app.route('/create_post/<board_name>', methods=['GET', 'POST'])
@@ -239,18 +227,28 @@ def create_post(board_name):
             if file and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
                 unique_filename = f"{uuid.uuid4()}_{filename}"
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+                file_content = file.read()
+
                 try:
-                    file.save(file_path)
-                    print(f"DEBUG: Original image saved to: {file_path}")
-                    compress_image(file_path)
-                    image_url = url_for('static', filename=f'uploads/{unique_filename}')
-                    print(f"DEBUG: Image URL for DB: {image_url}")
+                    bucket_path = f"public/{unique_filename}"
+                    res = supabase.storage.from_(SUPABASE_BUCKET_NAME).upload(bucket_path, file_content, {"content-type": file.mimetype})
+
+                    if res.status_code == 200:
+                        print(f"Image uploaded to Supabase Storage: {bucket_path}")
+                        image_url = f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_BUCKET_NAME}/{bucket_path}"
+                        print(f"Image Public URL: {image_url}")
+                    else:
+                        flash(f"Error uploading image to Supabase: {res.json().get('error', 'Unknown error')}", "error")
+                        print(f"Supabase upload failed with status {res.status_code}: {res.text}")
+                        return render_template('create_post.html', board_name=board_name)
+
                 except Exception as e:
-                    flash(f"Error processing image: {e}", "error")
-                    if os.path.exists(file_path):
-                        os.remove(file_path)
+                    flash(f"Error processing or uploading image: {e}", "error")
+                    print(f"Exception during Supabase upload: {e}")
                     return render_template('create_post.html', board_name=board_name)
+            else:
+                flash("Invalid file type or no file selected.", "error")
+                return render_template('create_post.html', board_name=board_name)
         try:
             new_post_data = {
                 "board_id": board_name,
@@ -267,7 +265,7 @@ def create_post(board_name):
             return redirect(url_for('board', board_name=board_name))
         except Exception as e:
             flash(f"An unexpected error occurred: {e}", "error")
-            print(f"DEBUG: Unexpected Exception during post creation: {e}")
+            print(f"Unexpected Exception during post creation: {e}")
     return render_template('create_post.html', board_name=board_name)
 
 @app.route('/comment_on_post/<post_id>', methods=['POST'])
@@ -304,7 +302,7 @@ def comment_on_post(post_id):
         flash("Comment added successfully!", "success")
     except Exception as e:
         flash(f"An unexpected error occurred: {e}", "error")
-        print(f"DEBUG: Unexpected Exception during comment creation: {e}")
+        print(f"Unexpected Exception during comment creation: {e}")
     return redirect(url_for('view_post', post_id=post_id))
 
 @app.route('/chat')
@@ -329,10 +327,10 @@ def handle_message(data):
     if not username:
         emit('receive_message', {'msg': 'Please log in to send messages.', 'username': 'System', 'error': True})
         return
-    
+
     timestamp = datetime.now().strftime('%H:%M:%S')
     emit('receive_message', {'username': username, 'message': message_content, 'timestamp': timestamp}, broadcast=True)
     print(f"[{timestamp}] {username}: {message_content}")
 
 #if __name__ == '__main__':
-#    socketio.run(app, debug=True, port=8080)
+#    socketio.run(app, debug=True, port=8080, allow_unsafe_werkzeug=True)
