@@ -15,11 +15,11 @@
         <small>This is the username that is relevant to your report (e.g., of the user being reported, or 'Bug' if it's a bug report, or 'Suggestion' if it's a suggestion for the site).</small>
 
         <label for="board_name">Related Board Name (Optional):</label>
-        <input type="text" id="board_name" name="board_name" placeholder="e.g., general or /b/" value="{{ request.form.get('board_name', '') }}">
+        <input type="text" id="board_name" name="board_name" placeholder="e.g., 'general' or /board/..." value="{{ request.form.get('board_name', '') }}">
         <small>If your report is related to a specific board.</small>
 
         <label for="post_id">Related Post ID (Optional):</label>
-        <input type="text" id="post_id" name="post_id" placeholder="e.g., 65f3f98276f8b9e6a0c2c1a0" value="{{ request.form.get('post_id', '') }}">
+        <input type="text" id="post_id" name="post_id" placeholder="e.g., 683095e693a36cc01e4ad7f1" value="{{ request.form.get('post_id', '') }}">
         <small>If your report is related to a specific post. You can find this in the URL when viewing a post.</small>
 
         <label for="report_subject">Main Reason for Report:</label>
