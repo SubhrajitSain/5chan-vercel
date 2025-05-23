@@ -8,7 +8,6 @@ import dotenv
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
 from bson.objectid import ObjectId
-from flask_socketio import SocketIO, emit, join_room, leave_room
 import cloudinary
 import cloudinary.uploader
 
@@ -16,8 +15,6 @@ dotenv.load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "a_super_secret_key_that_should_be_in_env")
-
-socketio = SocketIO(app, cors_allowed_origins="*", path="/chatsocket/socket.io")
 
 MONGO_URI = os.environ.get("MONGO_URI")
 if not MONGO_URI:
@@ -327,33 +324,6 @@ def comment_on_post(post_id):
         print(f"Unexpected Exception during comment creation: {e}")
     return redirect(url_for('view_post', post_id=post_id))
 
-@app.route('/chat')
-def chat():
-    return render_template('chat.html', username=session.get('username'))
-
-@socketio.on('connect')
-def handle_connect():
-    username = session.get('username', 'Anonymous')
-    print(f'Client connected: {request.sid} (User: {username})')
-
-@socketio.on('disconnect')
-def handle_disconnect():
-    username = session.get('username', 'Anonymous')
-    print(f'Client disconnected: {request.sid} (User: {username})')
-
-@socketio.on('send_message')
-def handle_message(data):
-    message_content = data['message']
-    username = session.get('username')
-
-    if not username:
-        emit('receive_message', {'msg': 'Please log in to send messages.', 'username': 'System', 'error': True})
-        return
-
-    timestamp = datetime.now().strftime('%H:%M:%S')
-    emit('receive_message', {'username': username, 'message': message_content, 'timestamp': timestamp}, broadcast=True)
-    print(f"[{timestamp}] {username}: {message_content}")
-
 @app.errorhandler(400)
 def bad_request_error(e):
     return render_template('error.html', error_code=400, error_message="Bad Request: The server cannot process the request due to a client error (e.g., malformed syntax)."), 400
@@ -395,4 +365,4 @@ def service_unavailable_error(e):
     return render_template('error.html', error_code=503, error_message="Service Unavailable: The server is currently unable to handle the request due to temporary overloading or maintenance of the server."), 503
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, port=8080, allow_unsafe_werkzeug=True)
+    app.run(debug=True, port=8080)
