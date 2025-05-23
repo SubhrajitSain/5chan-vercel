@@ -12,7 +12,7 @@
   ],
   "routes": [
     {
-      "src": "/socket.io/(.*)",
+      "src": "/chatsocket/socket.io/(.*)",
       "dest": "api/index.py"
     },
     {
