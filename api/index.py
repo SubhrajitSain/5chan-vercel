@@ -203,6 +203,79 @@ def create_board():
             print(f"Unexpected Exception during board creation: {e}")
     return render_template('create_board.html')
 
+@app.route('/settings', methods=['GET', 'POST'])
+def profile_settings():
+    if 'user_id' not in session:
+        flash("You must be logged in to access profile settings.", "warning")
+        return redirect(url_for('login'))
+
+    user_id = session['user_id']
+    user = users_collection.find_one({"_id": ObjectId(user_id)})
+
+    if not user:
+        flash("User not found.", "error")
+        session.pop('user_id', None)
+        session.pop('username', None)
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        new_username = request.form.get('username_new_username', '').strip()
+        if new_username and new_username != user['username']:
+            if users_collection.find_one({"username": new_username}):
+                flash("Username already taken.", "error")
+            else:
+                try:
+                    users_collection.update_one(
+                        {"_id": ObjectId(user_id)},
+                        {"$set": {"username": new_username}}
+                    )
+                    session['username'] = new_username
+                    flash("Username updated successfully!", "success")
+                    user['username'] = new_username
+                except Exception as e:
+                    flash(f"Error updating username: {e}", "error")
+
+        new_email = request.form.get('email_new_email', '').strip()
+        if new_email and new_email != user['email']:
+            if users_collection.find_one({"email": new_email}):
+                flash("Email already registered.", "error")
+            else:
+                try:
+                    users_collection.update_one(
+                        {"_id": ObjectId(user_id)},
+                        {"$set": {"email": new_email}}
+                    )
+                    flash("Email updated successfully!", "success")
+                    user['email'] = new_email
+                except Exception as e:
+                    flash(f"Error updating email: {e}", "error")
+
+        current_password = request.form.get('password_current_password')
+        new_password = request.form.get('password_new_password')
+        confirm_password = request.form.get('password_confirm_password')
+
+        if new_password:
+            if not current_password:
+                flash("Current password is required to change password.", "error")
+            elif not check_password_hash(user['password_hash'], current_password):
+                flash("Incorrect current password.", "error")
+            elif new_password != confirm_password:
+                flash("New password and confirm password do not match.", "error")
+            elif len(new_password) < 6:
+                flash("New password must be at least 6 characters long.", "error")
+            else:
+                try:
+                    new_password_hash = generate_password_hash(new_password)
+                    users_collection.update_one(
+                        {"_id": ObjectId(user_id)},
+                        {"$set": {"password_hash": new_password_hash}}
+                    )
+                    flash("Password updated successfully!", "success")
+                except Exception as e:
+                    flash(f"Error updating password: {e}", "error")
+        return redirect(url_for('profile_settings'))
+    return render_template('profile_settings.html', user=user)
+
 @app.route('/create_post/<board_name>', methods=['GET', 'POST'])
 def create_post(board_name):
     if 'user_id' not in session:
