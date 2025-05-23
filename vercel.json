@@ -12,15 +12,10 @@
   ],
   "routes": [
     {
-      "src": "/chatsocket/socket.io/(.*)",
-      "dest": "api/index.py"
-    },
-    {
       "src": "/(.*)",
       "dest": "api/index.py"
     }
   ],
   "env": {
-    "GUNICORN_CMD_ARGS": "--worker-class geventwebsocket.gunicorn.workers.GeventWebSocketWorker --bind 0.0.0.0:$PORT --workers 1"
   }
 }
