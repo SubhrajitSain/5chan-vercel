@@ -10,7 +10,15 @@ from pymongo.server_api import ServerApi
 from bson.objectid import ObjectId
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from supabase import create_client, Client
+import logging
+import http.client
 
+http.client.HTTPConnection.debuglevel = 1
+logging.basicConfig()
+logging.getLogger().setLevel(logging.DEBUG)
+requests_log = logging.getLogger("requests.packages.urllib3")
+requests_log.setLevel(logging.DEBUG)
+requests_log.propagate = True
 dotenv.load_dotenv()
 
 app = Flask(__name__)
