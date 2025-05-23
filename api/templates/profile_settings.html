@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<div class="profile-settings-container">
+    <h2>Your Profile Settings</h2>
+
+    <form action="{{ url_for('profile_settings') }}" method="POST" class="settings-form">
+        <h3>Change Username</h3>
+        <p>Current Username: **{{ user.username }}**</p>
+        <label for="username_new_username">New Username:</label>
+        <input type="text" id="username_new_username" name="username_new_username" value="{{ user.username }}" required>
+        <button type="submit">Update Username</button>
+    </form>
+
+    <form action="{{ url_for('profile_settings') }}" method="POST" class="settings-form">
+        <h3>Change Email</h3>
+        <p>Current Email: **{{ user.email }}**</p>
+        <label for="email_new_email">New Email:</label>
+        <input type="email" id="email_new_email" name="email_new_email" value="{{ user.email }}" required>
+        <button type="submit">Update Email</button>
+    </form>
+
+    <form action="{{ url_for('profile_settings') }}" method="POST" class="settings-form">
+        <h3>Change Password</h3>
+        <label for="password_current_password">Current Password:</label>
+        <input type="password" id="password_current_password" name="password_current_password" required>
+
+        <label for="password_new_password">New Password:</label>
+        <input type="password" id="password_new_password" name="password_new_password" required>
+
+        <label for="password_confirm_password">Confirm New Password:</label>
+        <input type="password" id="password_confirm_password" name="password_confirm_password" required>
+
+        <button type="submit">Update Password</button>
+    </form>
+</div>
+
+<!-- This stylesheet is here so that less time is required for loading css on other pages with the base. !-->
+<style>
+    .profile-settings-container {
+        max-width: 600px;
+        margin: 40px auto;
+        padding: 20px;
+        background-color: var(--background-darker);
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .profile-settings-container h2,
+    .profile-settings-container h3 {
+        color: var(--text-color);
+        text-align: center;
+        margin-bottom: 20px;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 10px;
+    }
+
+    .settings-form {
+        margin-bottom: 30px;
+        padding: 20px;
+        background-color: var(--background-color);
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+    }
+
+    .settings-form p {
+        color: var(--text-color);
+        margin-bottom: 15px;
+    }
+
+    .settings-form label {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--text-color);
+        font-weight: bold;
+    }
+
+    .settings-form input[type="text"],
+    .settings-form input[type="email"],
+    .settings-form input[type="password"] {
+        width: calc(100% - 20px);
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid var(--input-border-color);
+        border-radius: 5px;
+        background-color: var(--input-background);
+        color: var(--input-text-color);
+        box-sizing: border-box;
+    }
+
+    .settings-form button {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: background-color 0.3s ease;
+        width: 100%;
+    }
+
+    .settings-form button:hover {
+        background-color: var(--primary-dark-color);
+    }
+</style>
+{% endblock %}
