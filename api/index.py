@@ -9,16 +9,9 @@ from pymongo import MongoClient
 from pymongo.server_api import ServerApi
 from bson.objectid import ObjectId
 from flask_socketio import SocketIO, emit, join_room, leave_room
-from supabase import create_client, Client
-import logging
-import http.client
+import cloudinary
+import cloudinary.uploader
 
-http.client.HTTPConnection.debuglevel = 1
-logging.basicConfig()
-logging.getLogger().setLevel(logging.DEBUG)
-requests_log = logging.getLogger("requests.packages.urllib3")
-requests_log.setLevel(logging.DEBUG)
-requests_log.propagate = True
 dotenv.load_dotenv()
 
 app = Flask(__name__)
@@ -44,18 +37,23 @@ try:
 except Exception as e:
     print(f"Error connecting to MongoDB: {e}")
 
-SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY")
-SUPABASE_BUCKET_NAME = "5chanimages"
+CLOUDINARY_CLOUD_NAME = os.environ.get("CLOUDINARY_CLOUD_NAME")
+CLOUDINARY_API_KEY = os.environ.get("CLOUDINARY_API_KEY")
+CLOUDINARY_API_SECRET = os.environ.get("CLOUDINARY_API_SECRET")
 
-if not SUPABASE_URL or not SUPABASE_ANON_KEY:
-    raise ValueError("SUPABASE_URL and SUPABASE_ANON_KEY environment variables not set.")
+if not all([CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET]):
+    raise ValueError("Cloudinary environment variables not set.")
 
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
-print(f"Supabase Client initialized for URL: {SUPABASE_URL}")
+cloudinary.config(
+    cloud_name=CLOUDINARY_CLOUD_NAME,
+    api_key=CLOUDINARY_API_KEY,
+    api_secret=CLOUDINARY_API_SECRET,
+    secure=True
+)
+print("Cloudinary Client initialized.")
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -235,40 +233,44 @@ def create_post(board_name):
             if file and file.filename != '':
                 if allowed_file(file.filename):
                     filename = secure_filename(file.filename)
-                    unique_filename = f"{uuid.uuid4()}_{filename}"
+                    public_id = f"5chan_images/{uuid.uuid4()}_{os.path.splitext(filename)[0]}"
+
                     file_content = file.read()
+                    file.seek(0)
 
                     if not file_content:
                         flash("Uploaded file is empty.", "error")
                         return render_template('create_post.html', board_name=board_name)
 
-                    print(f"Uploading file: {unique_filename}, MIME Type: {file.mimetype}, Size: {len(file_content)} bytes")
+                    if len(file_content) > app.config['MAX_CONTENT_LENGTH']:
+                        flash(f"File size exceeds the limit of {app.config['MAX_CONTENT_LENGTH'] / (1024 * 1024):.0f}MB.", "error")
+                        return render_template('create_post.html', board_name=board_name)
+
+                    print(f"Attempting upload to Cloudinary. Public ID: {public_id}, MIME Type: {file.mimetype}, Size: {len(file_content)} bytes")
 
                     try:
-                        bucket_path = f"public/{unique_filename}"
-                        res = supabase.storage.from_(SUPABASE_BUCKET_NAME).upload(
-                            bucket_path,
-                            file_content,
-                            {"content-type": file.mimetype}
+                        upload_result = cloudinary.uploader.upload(
+                            file.stream,
+                            public_id=public_id,
+                            folder="5chan_images",
+                            resource_type="image"
                         )
 
-                        if res.status_code == 200:
-                            print(f"Image uploaded to Supabase Storage: {bucket_path}")
-                            image_url = f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_BUCKET_NAME}/{bucket_path}"
-                            print(f"Image Public URL: {image_url}")
+                        if upload_result and 'secure_url' in upload_result:
+                            image_url = upload_result['secure_url']
+                            print(f"Image uploaded to Cloudinary: {image_url}")
                         else:
-                            flash(f"Error uploading image to Supabase: {res.json().get('error', 'Unknown error')}", "error")
-                            print(f"Supabase upload failed with status {res.status_code}: {res.text}")
+                            flash(f"Error uploading image to Cloudinary: {upload_result.get('error', 'Unknown error')}", "error")
+                            print(f"Cloudinary upload failed: {upload_result}")
                             return render_template('create_post.html', board_name=board_name)
 
                     except Exception as e:
                         flash(f"Error processing or uploading image: {e}", "error")
-                        print(f"Exception during Supabase upload: {e}")
+                        print(f"Cloudinary upload exception: {e}")
                         return render_template('create_post.html', board_name=board_name)
                 else:
                     flash("Invalid file type.", "error")
                     return render_template('create_post.html', board_name=board_name)
-
         try:
             new_post_data = {
                 "board_id": board_name,
@@ -352,5 +354,5 @@ def handle_message(data):
     emit('receive_message', {'username': username, 'message': message_content, 'timestamp': timestamp}, broadcast=True)
     print(f"[{timestamp}] {username}: {message_content}")
 
-#if __name__ == '__main__':
-#    socketio.run(app, debug=True, port=8080, allow_unsafe_werkzeug=True)
+if __name__ == '__main__':
+    socketio.run(app, debug=True, port=8080, allow_unsafe_werkzeug=True)
