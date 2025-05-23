@@ -17,7 +17,7 @@ dotenv.load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "a_super_secret_key_that_should_be_in_env")
 
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, cors_allowed_origins="*", path="/chatsocket/socket.io")
 
 MONGO_URI = os.environ.get("MONGO_URI")
 if not MONGO_URI:
