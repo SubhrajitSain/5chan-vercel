@@ -8,7 +8,7 @@
 
     <form action="{{ url_for('submit_report') }}" method="POST">
         <p>Use this form to report violations, provide suggestions, or report bugs.</p>
-        <p>Your current username (for tracking reporter): **{{ session.get('username') }}**</p>
+        <p>Your current username (for tracking reporter): <strong>{{ session.get('username') }}</strong></p>
 
         <label for="reported_username">Username you remember for the reason of the report:</label>
         <input type="text" id="reported_username" name="reported_username" placeholder="e.g., problematic_user or Bug" value="{{ request.form.get('reported_username', '') }}" required>
