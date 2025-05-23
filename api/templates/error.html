@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Error{% endblock %}
+
+{% block content %}
+<section class="error-section">
+    <h2>Error {{ error_code }}</h2>
+    <p>{{ error_message }}</p>
+    <p>We apologize for the inconvenience. Please try one of the following:</p>
+    <ul>
+        <li><a href="{{ url_for('index') }}">Homepage</a></li>
+        <li>If you reached this page from a broken link, please let us know.</li>
+    </ul>
+</section>
+{% endblock %}
