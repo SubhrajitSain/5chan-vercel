@@ -408,7 +408,7 @@ def submit_report():
         "Spam",
         "Harassment / Hate Speech",
         "Illegal Content",
-        "NSFW / Inappropriate Content",
+        "Unmarked NSFW / Inappropriate Content",
         "Impersonation",
         "Bug Report",
         "Feature Suggestion",
