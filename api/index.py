@@ -354,5 +354,45 @@ def handle_message(data):
     emit('receive_message', {'username': username, 'message': message_content, 'timestamp': timestamp}, broadcast=True)
     print(f"[{timestamp}] {username}: {message_content}")
 
+@app.errorhandler(400)
+def bad_request_error(e):
+    return render_template('error.html', error_code=400, error_message="Bad Request: The server cannot process the request due to a client error (e.g., malformed syntax)."), 400
+
+@app.errorhandler(401)
+def unauthorized_error(e):
+    return render_template('error.html', error_code=401, error_message="Unauthorized: Authentication is required or has failed. Please log in."), 401
+
+@app.errorhandler(403)
+def forbidden_error(e):
+    return render_template('error.html', error_code=403, error_message="Forbidden: You do not have permission to access this resource."), 403
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('error.html', error_code=404, error_message="Not Found: The page you are looking for does not exist."), 404
+
+@app.errorhandler(405)
+def method_not_allowed_error(e):
+    return render_template('error.html', error_code=405, error_message="Method Not Allowed: The requested method is not supported for this URL."), 405
+
+@app.errorhandler(408)
+def request_timeout_error(e):
+    return render_template('error.html', error_code=408, error_message="Request Timeout: The server timed out waiting for the request."), 408
+
+@app.errorhandler(413) # Payload Too Large
+def request_entity_too_large(e):
+    return render_template('error.html', error_code=413, error_message=f"Payload Too Large: The file you uploaded is too large. Maximum allowed size is {app.config['MAX_CONTENT_LENGTH'] / (1024 * 1024):.0f}MB."), 413
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    return render_template('error.html', error_code=500, error_message="Internal Server Error: Something went wrong on our end. We're working to fix it!"), 500
+
+@app.errorhandler(502)
+def bad_gateway_error(e):
+    return render_template('error.html', error_code=502, error_message="Bad Gateway: The server received an invalid response from an upstream server."), 502
+
+@app.errorhandler(503)
+def service_unavailable_error(e):
+    return render_template('error.html', error_code=503, error_message="Service Unavailable: The server is currently unable to handle the request due to temporary overloading or maintenance of the server."), 503
+
 if __name__ == '__main__':
     socketio.run(app, debug=True, port=8080, allow_unsafe_werkzeug=True)
