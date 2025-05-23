@@ -8,7 +8,7 @@
 
     <form action="{{ url_for('profile_settings') }}" method="POST">
         <h3>Change Username</h3>
-        <p>Current Username: **{{ user.username }}**</p>
+        <p>Current Username: <strong>{{ user.username }}</strong></p>
         <label for="username_new_username">New Username:</label>
         <input type="text" id="username_new_username" name="username_new_username" value="{{ user.username }}" required>
         <button type="submit">Update Username</button>
@@ -16,7 +16,7 @@
 
     <form action="{{ url_for('profile_settings') }}" method="POST">
         <h3>Change Email</h3>
-        <p>Current Email: **{{ user.email }}**</p>
+        <p>Current Email: <strong>{{ user.email }}</strong></p>
         <label for="email_new_email">New Email:</label>
         <input type="email" id="email_new_email" name="email_new_email" value="{{ user.email }}" required>
         <button type="submit">Update Email</button>
