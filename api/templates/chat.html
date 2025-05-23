@@ -22,7 +22,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.8.1/socket.io.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const socket = io();
+            const socket = io({ path: "/chatsocket/socket.io" });
             const messagesDiv = document.getElementById('messages');
             const messageInput = document.getElementById('message_input');
             const sendButton = document.getElementById('send_button');
