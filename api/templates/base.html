@@ -21,7 +21,8 @@
         <nav>
             <a href="{{ url_for('index') }}">Home</a>
             {% if session.get('user_id') %}
-                <a href="{{ url_for('create_board') }}">Create Board</a>
+                <a href="{{ url_for('create_board') }}">New Board</a>
+            <a href="{{ url_for('profile_settings') }}">Settings</a>
                 <a href="{{ url_for('logout') }}">Logout {{ session.get('username', 'User') }}</a>
             {% else %}
                 <a href="{{ url_for('register') }}">Register</a>
