@@ -27,6 +27,7 @@ users_collection = db.users
 boards_collection = db.boards
 posts_collection = db.posts
 comments_collection = db.comments
+reports_collection = db.reports
 
 try:
     client.admin.command('ping')
@@ -396,6 +397,94 @@ def comment_on_post(post_id):
         flash(f"An unexpected error occurred: {e}", "error")
         print(f"Unexpected Exception during comment creation: {e}")
     return redirect(url_for('view_post', post_id=post_id))
+
+@app.route('/report', methods=['GET', 'POST'])
+def submit_report():
+    if 'user_id' not in session:
+        flash("You must be logged in to submit a report.", "warning")
+        return redirect(url_for('login'))
+
+    report_subjects = [
+        "Spam",
+        "Harassment / Hate Speech",
+        "Illegal Content",
+        "NSFW / Inappropriate Content",
+        "Impersonation",
+        "Bug Report",
+        "Feature Suggestion",
+        "Other"
+    ]
+
+    if request.method == 'POST':
+        reporter_username = session.get('username')
+        reported_username = request.form.get('reported_username', '').strip()
+        board_name = request.form.get('board_name', '').strip()
+        post_id = request.form.get('post_id', '').strip()
+        report_subject = request.form.get('report_subject', '').strip()
+        other_subject = request.form.get('other_subject', '').strip()
+        summary = request.form.get('summary', '').strip()
+
+        if not reported_username:
+            flash("The username you remember for the report reason is required.", "error")
+            return render_template('report.html', report_subjects=report_subjects)
+        if not report_subject:
+            flash("Please select a report subject.", "error")
+            return render_template('report.html', report_subjects=report_subjects)
+        if report_subject == "Other" and not other_subject:
+            flash("Please specify the 'Other' subject.", "error")
+            return render_template('report.html', report_subjects=report_subjects)
+        if not summary:
+            flash("A summary of the report is required.", "error")
+            return render_template('report.html', report_subjects=report_subjects)
+        if len(summary) < 10 or len(summary) > 500:
+            flash("Summary must be between 10 and 500 characters.", "error")
+            return render_template('report.html', report_subjects=report_subjects)
+
+        final_subject = other_subject if report_subject == "Other" else report_subject
+
+        target_board = None
+        target_post = None
+
+        if board_name:
+            target_board = boards_collection.find_one({"name": board_name})
+            if not target_board:
+                flash(f"Board '/{board_name}/' does not exist.", "error")
+                return render_template('report.html', report_subjects=report_subjects)
+
+        if post_id:
+            try:
+                target_post = posts_collection.find_one({"_id": ObjectId(post_id)})
+            except Exception:
+                flash("Invalid Post ID format.", "error")
+                return render_template('report.html', report_subjects=report_subjects)
+            if not target_post:
+                flash("Post with the provided ID does not exist.", "error")
+                return render_template('report.html', report_subjects=report_subjects)
+            if target_board and target_post['board_id'] != target_board['name']:
+                 flash("The provided Post ID does not belong to the specified Board.", "error")
+                 return render_template('report.html', report_subjects=report_subjects)
+
+        try:
+            report_data = {
+                "reporter_id": session['user_id'],
+                "reporter_username": reporter_username,
+                "reported_username_reason": reported_username,
+                "board_name": board_name if board_name else None,
+                "post_id": ObjectId(post_id) if post_id else None,
+                "subject": final_subject,
+                "summary": summary,
+                "status": "pending",
+                "created_at": datetime.utcnow()
+            }
+            reports_collection.insert_one(report_data)
+            flash("Your report has been submitted successfully!", "success")
+            return redirect(url_for('index'))
+        except Exception as e:
+            flash(f"An unexpected error occurred during report submission: {e}", "error")
+            print(f"Error submitting report: {e}")
+
+    return render_template('report.html', report_subjects=report_subjects)
+
 
 @app.errorhandler(400)
 def bad_request_error(e):
