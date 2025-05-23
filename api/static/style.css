@@ -442,12 +442,6 @@ select {
     cursor: pointer;
 }
 
-select:focus {
-    border-color: #FFB22B;
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(255, 178, 43, 0.5);
-}
-
 select option {
     background-color: #5C3D92;
     color: #E0E0E0;
