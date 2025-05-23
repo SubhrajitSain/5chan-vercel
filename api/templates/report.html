@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Report{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Submit a Report, Suggestion, or Bug</h2>
+
+    <form action="{{ url_for('submit_report') }}" method="POST">
+        <p>Use this form to report violations, provide suggestions, or report bugs.</p>
+        <p>Your current username (for tracking reporter): **{{ session.get('username') }}**</p>
+
+        <label for="reported_username">Username you remember for the reason of the report:</label>
+        <input type="text" id="reported_username" name="reported_username" placeholder="e.g., problematic_user or Bug" value="{{ request.form.get('reported_username', '') }}" required>
+        <small>This is the username that is relevant to your report (e.g., of the user being reported, or 'Bug' if it's a bug report, or 'Suggestion' if it's a suggestion for the site).</small>
+
+        <label for="board_name">Related Board Name (Optional):</label>
+        <input type="text" id="board_name" name="board_name" placeholder="e.g., general or /b/" value="{{ request.form.get('board_name', '') }}">
+        <small>If your report is related to a specific board.</small>
+
+        <label for="post_id">Related Post ID (Optional):</label>
+        <input type="text" id="post_id" name="post_id" placeholder="e.g., 65f3f98276f8b9e6a0c2c1a0" value="{{ request.form.get('post_id', '') }}">
+        <small>If your report is related to a specific post. You can find this in the URL when viewing a post.</small>
+
+        <label for="report_subject">Main Reason for Report:</label>
+        <select id="report_subject" name="report_subject" required onchange="toggleOtherSubject()">
+            <option value="">-- Select a subject --</option>
+            {% for subject in report_subjects %}
+                <option value="{{ subject }}" {% if request.form.get('report_subject') == subject %}selected{% endif %}>{{ subject }}</option>
+            {% endfor %}
+        </select>
+
+        <div id="other_subject_container" style="display: none; margin-top: 15px;">
+            <label for="other_subject">Specify 'Other' Subject:</label>
+            <input type="text" id="other_subject" name="other_subject" placeholder="e.g., UI Glitch, Feature Request" value="{{ request.form.get('other_subject', '') }}">
+        </div>
+
+        <label for="summary">Summary of Report (10-500 characters):</label>
+        <textarea id="summary" name="summary" rows="5" placeholder="Provide a detailed summary of the issue, suggestion, or behavior you are reporting." required>{{ request.form.get('summary', '') }}</textarea>
+
+        <button type="submit">Submit Report</button>
+    </form>
+</div>
+
+<script>
+    function toggleOtherSubject() {
+        const subjectSelect = document.getElementById('report_subject');
+        const otherSubjectContainer = document.getElementById('other_subject_container');
+        if (subjectSelect.value === 'Other') {
+            otherSubjectContainer.style.display = 'block';
+            document.getElementById('other_subject').setAttribute('required', 'required');
+        } else {
+            otherSubjectContainer.style.display = 'none';
+            document.getElementById('other_subject').removeAttribute('required');
+            document.getElementById('other_subject').value = '';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', toggleOtherSubject);
+</script>
+{% endblock %}
