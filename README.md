@@ -1,5 +1,6 @@
 # 5chan
-Latest source code for the main 5chan site.
+For real.
+Latest source code for 5chan.
 
 ## Contributions:
 For contribution request please contact ANW on [discord](https://discord.com/users/1132513905898434600).
