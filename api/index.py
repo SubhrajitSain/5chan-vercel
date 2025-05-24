@@ -33,7 +33,7 @@ try:
     client.admin.command('ping')
     print("Pinged your deployment. You successfully connected to MongoDB!")
 except Exception as e:
-    print(f"Error connecting to MongoDB: {e}")
+    raise RuntimeError(f"Error connecting to MongoDB: {e}")
 
 CLOUDINARY_CLOUD_NAME = os.environ.get("CLOUDINARY_CLOUD_NAME")
 CLOUDINARY_API_KEY = os.environ.get("CLOUDINARY_API_KEY")
@@ -69,7 +69,7 @@ def index():
 def board(board_name):
     board_obj = boards_collection.find_one({"name": board_name})
     if not board_obj:
-        flash(f"Board '/{board_name}/' does not exist.", "error")
+        flash(f"Board '/{board_name}/' does not exist or has been removed.", "error")
         return redirect(url_for('index'))
 
     posts = list(posts_collection.find({"board_id": board_name}).sort("created_at", -1))
@@ -99,7 +99,7 @@ def view_post(post_id):
     comments = list(comments_collection.find({"post_id": ObjectId(post_id)}).sort("created_at", 1))
     for comment in comments:
         commenter_user = users_collection.find_one({"_id": ObjectId(comment['user_id'])})
-        comment['commenter_username'] = commenter_user['username'] if commenter_user else "Anonymous"
+        comment['commenter_username'] = commenter_user['username'] if commenter_user else "N/A"
 
     return render_template('post.html', post=post, comments=comments)
 
@@ -126,11 +126,11 @@ def register():
             return render_template('register.html')
         existing_user_email = users_collection.find_one({"email": email})
         if existing_user_email:
-            flash("Email already registered. Please login or use a different email.", "error")
+            flash("Email address already in use.", "error")
             return render_template('register.html')
         existing_user_username = users_collection.find_one({"username": username})
         if existing_user_username:
-            flash("Username already taken. Please choose a different username.", "error")
+            flash("Username has already been taken.", "error")
             return render_template('register.html')
         try:
             password_hash = generate_password_hash(password)
@@ -142,7 +142,7 @@ def register():
             }
             result = users_collection.insert_one(new_user_data)
             user_id = str(result.inserted_id)
-            flash("Registration successful! You can now log in.", "success")
+            flash("You have been registered successfully. Use your email and password to login.", "success")
             return redirect(url_for('login'))
         except Exception as e:
             flash(f"An unexpected error occurred during registration: {e}", "error")
@@ -158,10 +158,10 @@ def login():
         if user and check_password_hash(user['password_hash'], password):
             session['user_id'] = str(user['_id'])
             session['username'] = user['username']
-            flash("Login successful!", "success")
+            flash(f"You are now logged in as {session['username']}.", "success")
             return redirect(url_for('index'))
         else:
-            flash("Login failed: Incorrect email or password.", "error")
+            flash("Incorrect email or password.", "error")
     return render_template('login.html')
 
 @app.route('/logout')
@@ -187,7 +187,7 @@ def create_board():
             return render_template('create_board.html')
         existing_board = boards_collection.find_one({"name": board_name})
         if existing_board:
-            flash(f"Board name '/{board_name}/' already exists. Please choose a different name.", "error")
+            flash(f"Board name '/{board_name}/' already exists.", "error")
             return render_template('create_board.html')
         try:
             new_board_data = {
@@ -197,7 +197,7 @@ def create_board():
                 "created_by": session['user_id']
             }
             boards_collection.insert_one(new_board_data)
-            flash(f"Board '/{board_name}/' created successfully!", "success")
+            flash(f"Board '/{board_name}/' created successfully.", "success")
             return redirect(url_for('board', board_name=board_name))
         except Exception as e:
             flash(f"An unexpected error occurred during board creation: {e}", "error")
@@ -207,7 +207,7 @@ def create_board():
 @app.route('/settings', methods=['GET', 'POST'])
 def profile_settings():
     if 'user_id' not in session:
-        flash("You must be logged in to access profile settings.", "warning")
+        flash("You must be logged in to access your settings.", "warning")
         return redirect(url_for('login'))
 
     user_id = session['user_id']
@@ -231,7 +231,7 @@ def profile_settings():
                         {"$set": {"username": new_username}}
                     )
                     session['username'] = new_username
-                    flash("Username updated successfully!", "success")
+                    flash("Username updated successfully.", "success")
                     user['username'] = new_username
                 except Exception as e:
                     flash(f"Error updating username: {e}", "error")
@@ -239,14 +239,14 @@ def profile_settings():
         new_email = request.form.get('email_new_email', '').strip()
         if new_email and new_email != user['email']:
             if users_collection.find_one({"email": new_email}):
-                flash("Email already registered.", "error")
+                flash("Email already registered by another user.", "error")
             else:
                 try:
                     users_collection.update_one(
                         {"_id": ObjectId(user_id)},
                         {"$set": {"email": new_email}}
                     )
-                    flash("Email updated successfully!", "success")
+                    flash("Email updated successfully.", "success")
                     user['email'] = new_email
                 except Exception as e:
                     flash(f"Error updating email: {e}", "error")
@@ -257,11 +257,11 @@ def profile_settings():
 
         if new_password:
             if not current_password:
-                flash("Current password is required to change password.", "error")
+                flash("Current password is required to set a new password.", "error")
             elif not check_password_hash(user['password_hash'], current_password):
                 flash("Incorrect current password.", "error")
             elif new_password != confirm_password:
-                flash("New password and confirm password do not match.", "error")
+                flash("New and confirmation passwords do not match.", "error")
             elif len(new_password) < 6:
                 flash("New password must be at least 6 characters long.", "error")
             else:
@@ -284,7 +284,7 @@ def create_post(board_name):
         return redirect(url_for('login'))
     board_obj = boards_collection.find_one({"name": board_name})
     if not board_obj:
-        flash(f"Board '/{board_name}/' does not exist. Cannot create post.", "error")
+        flash(f"Board '/{board_name}/' does not exist.", "error")
         return redirect(url_for('index'))
     if request.method == 'POST':
         title = request.form['title'].strip()
@@ -310,7 +310,7 @@ def create_post(board_name):
                     file.seek(0)
 
                     if not file_content:
-                        flash("Uploaded file is empty.", "error")
+                        flash("Uploaded file's content is empty.", "error")
                         return render_template('create_post.html', board_name=board_name)
 
                     if len(file_content) > app.config['MAX_CONTENT_LENGTH']:
@@ -331,7 +331,7 @@ def create_post(board_name):
                             image_url = upload_result['secure_url']
                             print(f"Image uploaded to Cloudinary: {image_url}")
                         else:
-                            flash(f"Error uploading image to Cloudinary: {upload_result.get('error', 'Unknown error')}", "error")
+                            flash(f"Error uploading image: {upload_result.get('error', 'Error cause N/A')}", "error")
                             print(f"Cloudinary upload failed: {upload_result}")
                             return render_template('create_post.html', board_name=board_name)
 
@@ -354,7 +354,7 @@ def create_post(board_name):
                 "is_nsfw": is_nsfw
             }
             posts_collection.insert_one(new_post_data)
-            flash("Post created successfully!", "success")
+            flash(f"Post created successfully in /{board_name}/.", "success")
             return redirect(url_for('board', board_name=board_name))
         except Exception as e:
             flash(f"An unexpected error occurred: {e}", "error")
@@ -425,7 +425,7 @@ def submit_report():
         summary = request.form.get('summary', '').strip()
 
         if not reported_username:
-            flash("The username you remember for the report reason is required.", "error")
+            flash("An username s required. If you are reporting a bug or suggestion, please enter 'Bug' or 'Suggestion' instead.", "error")
             return render_template('report.html', report_subjects=report_subjects)
         if not report_subject:
             flash("Please select a report subject.", "error")
@@ -458,10 +458,10 @@ def submit_report():
                 flash("Invalid Post ID format.", "error")
                 return render_template('report.html', report_subjects=report_subjects)
             if not target_post:
-                flash("Post with the provided ID does not exist.", "error")
+                flash("Post with the provided ID does not exist. Either you mistyped or the post has been already removed.", "error")
                 return render_template('report.html', report_subjects=report_subjects)
             if target_board and target_post['board_id'] != target_board['name']:
-                 flash("The provided Post ID does not belong to the specified Board.", "error")
+                 flash("The provided Post ID does not belong to the specified board.", "error")
                  return render_template('report.html', report_subjects=report_subjects)
 
         try:
@@ -477,7 +477,7 @@ def submit_report():
                 "created_at": datetime.utcnow()
             }
             reports_collection.insert_one(report_data)
-            flash("Your report has been submitted successfully!", "success")
+            flash("Your report has been submitted successfully.", "success")
             return redirect(url_for('index'))
         except Exception as e:
             flash(f"An unexpected error occurred during report submission: {e}", "error")
