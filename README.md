@@ -1,6 +1,7 @@
 # 5chan
 For real.
-Latest source code for 5chan.
+
+Latest source code for 5chan hosted on Vercel.
 
 ## Contributions:
 For contribution request please contact ANW on [discord](https://discord.com/users/1132513905898434600).
