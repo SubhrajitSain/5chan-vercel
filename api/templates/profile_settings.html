@@ -36,8 +36,113 @@
         <button type="submit">Update Password</button>
     </form>
 
+    <div class="custom-css-settings-section">
+        <h3>Custom CSS</h3>
+        <p>Apply your own CSS to customize the site's appearance. Your changes are saved in your browser and will persist across sessions on this device.</p>
+        <form id="customCssForm">
+            <label for="custom_css_input">Enter your custom CSS here:</label>
+            <textarea id="custom_css_input" name="custom_css_input" rows="15" placeholder="body { background-color: #yourcolor; } &#10;.container { border: 2px dashed red; }"></textarea>
+            <button type="submit">Save Custom CSS</button>
+            <button type="button" id="clearCustomCssButton" style="background-color: #F44336; margin-left: 10px;">Clear Custom CSS</button>
+        </form>
+        <p id="css_status" style="margin-top: 10px; color: #FFB22B;"></p>
+    </div>
+    
     <br>
     <label for="logout_button">Logout from 5chan</label><br>
     <a id="logout_button" name="logout_button" href="{{ url_for('logout') }}"><button class="button">Logout</button></a>
 </div>
+
+<script>
+    const customCssInput = document.getElementById('custom_css_input');
+    const customCssForm = document.getElementById('customCssForm');
+    const clearCustomCssButton = document.getElementById('clearCustomCssButton');
+    const cssStatus = document.getElementById('css_status');
+
+    const localStorageKey = 'user_custom_css';
+    const defaultCssPath = "{{ url_for('static', filename='style.css') }}";
+
+    function applyCustomCss() {
+        let styleTag = document.getElementById('custom-user-style');
+        const savedCss = localStorage.getItem(localStorageKey);
+
+        if (savedCss) {
+            if (!styleTag) {
+                styleTag = document.createElement('style');
+                styleTag.id = 'custom-user-style';
+                document.head.appendChild(styleTag);
+            }
+            styleTag.textContent = savedCss;
+        } else if (styleTag) {
+            styleTag.remove();
+        }
+    }
+
+    function removeCustomCss() {
+        const styleTag = document.getElementById('custom-user-style');
+        if (styleTag) {
+            styleTag.remove();
+        }
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedCss = localStorage.getItem(localStorageKey);
+
+        if (savedCss) {
+            customCssInput.value = savedCss;
+            cssStatus.textContent = 'Custom CSS loaded from your browser.';
+        } else {
+            cssStatus.textContent = 'Fetching default CSS...';
+            fetch(defaultCssPath)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(cssContent => {
+                    customCssInput.value = cssContent;
+                    cssStatus.textContent = 'Default CSS loaded. Modify and save to apply your own theme.';
+                })
+                .catch(error => {
+                    console.error('Error fetching default CSS:', error);
+                    customCssInput.value = '/* Error loading default CSS. Please check console. */';
+                    cssStatus.textContent = 'Failed to load default CSS.';
+                });
+        }
+    });
+
+    customCssForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const cssToSave = customCssInput.value.trim();
+        localStorage.setItem(localStorageKey, cssToSave);
+        cssStatus.textContent = 'Custom CSS saved! Refresh the page to see changes (or it applied immediately).';
+        applyCustomCss();
+    });
+
+    clearCustomCssButton.addEventListener('click', () => {
+        localStorage.removeItem(localStorageKey);
+        customCssInput.value = '';
+
+        cssStatus.textContent = 'Custom CSS cleared! Fetching default CSS...';
+        fetch(defaultCssPath)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(cssContent => {
+                customCssInput.value = cssContent;
+                cssStatus.textContent = 'Custom CSS cleared. Default CSS reloaded into editor. Refresh page to revert fully.';
+            })
+            .catch(error => {
+                console.error('Error fetching default CSS after clear:', error);
+                customCssInput.value = '/* Error loading default CSS after clear. */';
+                cssStatus.textContent = 'Failed to load default CSS after clear.';
+            });
+
+        removeCustomCss();
+    });
+</script>
 {% endblock %}
