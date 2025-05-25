@@ -3,7 +3,7 @@
 {% block title %}{{ post.title }}{% endblock %}
 
 {% block content %}
-<div class="container">
+<div>
     <p class="board-link"><a href="{{ url_for('board', board_name=post.board_id) }}"><button class="button">Back to /{{ post.board_id }}/</button></a></p><br>
 
     <div class="post-detail">
