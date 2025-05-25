@@ -164,16 +164,15 @@ def tos():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if 'user_id' in session:
-        return redirect(url_for('index')) # Already logged in
+        return redirect(url_for('index'))
 
-    abort(503)
+    abort(503, description="The email service to send you verification emails is currently experiencing some trouble. You cannot register now, try again later.")
     if request.method == 'POST':
         username = request.form['username'].strip()
         email = request.form['email'].strip()
         password = request.form['password']
         confirm_password = request.form['confirm_password']
-
-        # Basic validation
+        
         if not username or not email or not password or not confirm_password:
             flash("All fields are required.", "error")
             return render_template('register.html')
@@ -717,7 +716,7 @@ def forbidden_error(e):
 
 @app.errorhandler(404)
 def page_not_found(e):
-    return render_template('error.html', error_code=404, error_message="Not Found: The page you are looking for does not exist."), 404
+    return render_template('error.html', error_code=404, error_message="Not Found: The page or resource you are looking for does not exist."), 404
 
 @app.errorhandler(405)
 def method_not_allowed_error(e):
@@ -741,7 +740,7 @@ def bad_gateway_error(e):
 
 @app.errorhandler(503)
 def service_unavailable_error(e):
-    return render_template('error.html', error_code=503, error_message="Service Unavailable: The server is currently unable to handle the request due to temporary overloading or maintenance of the server."), 503
+    return render_template('error.html', error_code=503, error_message=f"Service Unavailable: {e.description}"), 503
 
 if __name__ == '__main__':
     app.run(debug=True, port=8080)
