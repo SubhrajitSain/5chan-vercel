@@ -3,7 +3,9 @@
 {% block title %}{{ post.title }}{% endblock %}
 
 {% block content %}
-    <a href="/board/{{ post.board_id }}"><button class="button">Back</button></a><br>
+<div class="container">
+    <p class="board-link"><a href="{{ url_for('board', board_name=post.board_id) }}"><button class="button">Back to /{{ post.board_id }}/</button></a></p><br>
+
     <div class="post-detail">
         <h2>
             {{ post.title }}
@@ -12,11 +14,27 @@
             {% endif %}
         </h2>
         <p class="post-meta">Posted by <strong>{{ post.author_username }}</strong> on {{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
-        <p class="post-content-full">{{ post.content }}</p>
+
+        <div id="post-content-display">
+            <p class="post-content-full">{{ post.content | default('No content for this post.') }}</p>
+            {% if session.get('user_id') == post.user_id %}
+                <button id="edit-post-content-button" class="button small">Edit Post</button>
+            {% endif %}
+        </div>
+
+        <div id="post-content-edit-form" style="display: none;">
+            <textarea id="post-content-textarea" rows="10" class="full-width-textarea">{{ post.content | default('') }}</textarea>
+            <button id="save-post-content-button" class="button">Save Changes</button>
+            <button id="cancel-post-content-button" class="button secondary">Cancel</button>
+            <p id="post-content-status" class="flash-messages"></p>
+        </div>
+
         {% if post.image_url %}
             <img src="{{ post.image_url }}" alt="Post Image" class="post-image-full">
         {% endif %}
     </div>
+
+    <hr style="margin: 30px 0; border-color: #4F2E8A;">
 
     <div class="comments-section">
         <h4>Comments</h4>
@@ -37,4 +55,64 @@
             <p>No comments yet. Be the first to comment!</p>
         {% endif %}
     </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const postContentDisplay = document.getElementById('post-content-display');
+        const editPostContentButton = document.getElementById('edit-post-content-button');
+        const postContentEditForm = document.getElementById('post-content-edit-form');
+        const postContentTextarea = document.getElementById('post-content-textarea');
+        const savePostContentButton = document.getElementById('save-post-content-button');
+        const cancelPostContentButton = document.getElementById('cancel-post-content-button');
+        const postContentStatus = document.getElementById('post-content-status');
+
+        if (editPostContentButton) {
+            editPostContentButton.addEventListener('click', () => {
+                postContentDisplay.style.display = 'none';
+                postContentEditForm.style.display = 'block';
+                postContentTextarea.focus();
+            });
+
+            cancelPostContentButton.addEventListener('click', () => {
+                postContentEditForm.style.display = 'none';
+                postContentDisplay.style.display = 'block';
+                postContentTextarea.value = postContentDisplay.querySelector('p').textContent;
+                postContentStatus.textContent = '';
+            });
+
+            savePostContentButton.addEventListener('click', async () => {
+                const newContent = postContentTextarea.value.trim();
+                const postId = "{{ post._id }}";
+
+                try {
+                    const response = await fetch(`/api/post/${postId}/edit_content`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ content: newContent })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        postContentStatus.className = 'flash-messages success';
+                        postContentStatus.textContent = data.message;
+                        postContentDisplay.querySelector('p').textContent = newContent || 'No content for this post.';
+                        postContentEditForm.style.display = 'none';
+                        postContentDisplay.style.display = 'block';
+                    } else {
+                        postContentStatus.className = 'flash-messages error';
+                        postContentStatus.textContent = data.error || 'Failed to save post content.';
+                    }
+                } catch (error) {
+                    console.error('Error saving post content:', error);
+                    postContentStatus.className = 'flash-messages error';
+                    postContentStatus.textContent = 'An unexpected error occurred.';
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}
