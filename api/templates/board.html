@@ -4,7 +4,7 @@
 
 {% block content %}
 <div>
-    <h2><a href="{{ url_for('board', board_name=board_name) }}">/{{ board_name }}/</a> - {{ board_obj.title }}</h2>
+    <h2><a href="{{ url_for('board', board_name=board_name) }}">/{{ board_name }}/</a></h2>
     <p class="board-meta">Created by {{ board_obj.creator_username }} on {{ board_obj.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
 
     <div id="board-description-display">
