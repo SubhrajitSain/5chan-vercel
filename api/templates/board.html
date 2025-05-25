@@ -3,8 +3,26 @@
 {% block title %}/{{ board_name }}/{% endblock %}
 
 {% block content %}
-    <h2>Welcome to /{{ board_name }}/</h2>
-    <p>{{ board_obj.description }}</p>
+<div class="container">
+    <h2><a href="{{ url_for('board', board_name=board_name) }}">/{{ board_name }}/</a> - {{ board_obj.title }}</h2>
+    <p class="board-meta">Created by {{ board_obj.creator_username }} on {{ board_obj.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+
+    <div id="board-description-display">
+        <p>{{ board_obj.description | default('No description yet.') }}</p>
+        {% if session.get('user_id') == board_obj.created_by %}
+            <button id="edit-board-description-button" class="button small">Edit Description</button>
+        {% endif %}
+    </div>
+
+    <div id="board-description-edit-form" style="display: none;">
+        <textarea id="board-description-textarea" rows="5" class="full-width-textarea">{{ board_obj.description | default('') }}</textarea>
+        <button id="save-board-description-button" class="button">Save Changes</button>
+        <button id="cancel-board-description-button" class="button secondary">Cancel</button>
+        <p id="board-description-status" class="flash-messages"></p>
+    </div>
+
+    <hr style="margin: 20px 0; border-color: #4F2E8A;">
+
     <a href="{{ url_for('create_post', board_name=board_name) }}">Create New Post</a><br><br>
 
     <div class="post-list">
@@ -17,9 +35,14 @@
                             <a href="{{ url_for('view_post', post_id=post._id) }}">view the post anyway</a>.
                         </p>
                     {% else %}
-                        <h3><a href="{{ url_for('view_post', post_id=post._id) }}">{{ post.title }}</a></h3>
+                        <h3>
+                            <a href="{{ url_for('view_post', post_id=post._id) }}">{{ post.title }}</a>
+                            {% if post.is_nsfw %}
+                                <span class="nsfw-tag">NSFW</span>
+                            {% endif %}
+                        </h3>
                         <p class="post-meta">Posted by <strong>{{ post.author_username }}</strong> on {{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
-                        <p>{{ post.content }}</p>
+                        <p>{{ post.content | default('No content, a database error might have occured.') }}</p>
                         {% if post.image_url %}
                             <img src="{{ post.image_url }}" alt="Post Image" class="post-image">
                         {% endif %}
@@ -30,4 +53,64 @@
             <p>No posts yet in /{{ board_name }}/. Be the first to create one!</p>
         {% endif %}
     </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const boardDescriptionDisplay = document.getElementById('board-description-display');
+        const editBoardDescriptionButton = document.getElementById('edit-board-description-button');
+        const boardDescriptionEditForm = document.getElementById('board-description-edit-form');
+        const boardDescriptionTextarea = document.getElementById('board-description-textarea');
+        const saveBoardDescriptionButton = document.getElementById('save-board-description-button');
+        const cancelBoardDescriptionButton = document.getElementById('cancel-board-description-button');
+        const boardDescriptionStatus = document.getElementById('board-description-status');
+
+        if (editBoardDescriptionButton) {
+            editBoardDescriptionButton.addEventListener('click', () => {
+                boardDescriptionDisplay.style.display = 'none';
+                boardDescriptionEditForm.style.display = 'block';
+                boardDescriptionTextarea.focus();
+            });
+
+            cancelBoardDescriptionButton.addEventListener('click', () => {
+                boardDescriptionEditForm.style.display = 'none';
+                boardDescriptionDisplay.style.display = 'block';
+                boardDescriptionTextarea.value = boardDescriptionDisplay.querySelector('p').textContent;
+                boardDescriptionStatus.textContent = '';
+            });
+
+            saveBoardDescriptionButton.addEventListener('click', async () => {
+                const newDescription = boardDescriptionTextarea.value.trim();
+                const boardName = "{{ board_name }}";
+
+                try {
+                    const response = await fetch(`/api/board/${boardName}/edit_description`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ description: newDescription })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        boardDescriptionStatus.className = 'flash-messages success';
+                        boardDescriptionStatus.textContent = data.message;
+                        boardDescriptionDisplay.querySelector('p').textContent = newDescription || 'No description yet.';
+                        boardDescriptionEditForm.style.display = 'none';
+                        boardDescriptionDisplay.style.display = 'block';
+                    } else {
+                        boardDescriptionStatus.className = 'flash-messages error';
+                        boardDescriptionStatus.textContent = data.error || 'Failed to save description.';
+                    }
+                } catch (error) {
+                    console.error('Error saving board description:', error);
+                    boardDescriptionStatus.className = 'flash-messages error';
+                    boardDescriptionStatus.textContent = 'An unexpected error occurred.';
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}
