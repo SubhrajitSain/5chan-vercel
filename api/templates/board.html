@@ -39,13 +39,7 @@
                         </p>
                     {% else %}
                         <h3>
-                            <a href="{{ url_for('view_post', post_id=post._id) }}">
-                                {% if post.title %}
-                                    {{ post.title }}
-                                {% else %}
-                                    [No title]
-                                {% endif
-                            </a>
+                            <a href="{{ url_for('view_post', post_id=post._id) }}">{% if post.title %}{{ post.title }}{% else %}{{ post._id }}{% endif %}</a>
                         </h3>
                         <p class="post-meta">Posted by <strong>{{ post.author_username }}</strong> on {{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
                         <p>{{ post.content | default('No content, a database error might have occured.') }}</p>
