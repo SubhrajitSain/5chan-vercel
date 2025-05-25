@@ -355,3 +355,17 @@ select option {
     color: #E0E0E0;
     padding: 10px;
 }
+
+.full-width-textarea {
+    width: calc(100% - 22px);
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #7D5BB4;
+    border-radius: 4px;
+    background-color: #5C3D92;
+    color: #E0E0E0;
+    font-family: 'monospace', monospace;
+    font-size: 1em;
+    box-sizing: border-box;
+    resize: vertical;
+}
