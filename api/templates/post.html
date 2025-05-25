@@ -34,8 +34,6 @@
         {% endif %}
     </div>
 
-    <hr style="margin: 30px 0; border-color: #4F2E8A;">
-
     <div class="comments-section">
         <h4>Comments</h4>
         <form action="{{ url_for('comment_on_post', post_id=post._id) }}" method="POST">
