@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>5chan - {% block title %}{% endblock %}</title>
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     
-    <style id="dynamic-main-style"></style>
+    <style id="custom-user-style"></style>
     
     <meta name="title" content="5chan (for real)">
     <meta name="description" content="Join 5chan to discuss various topics, share ideas, and connect with a vibrant community. Create boards, post content, and engage in discussions.">
@@ -50,30 +51,15 @@
         <script>
         // for loading user's css
         document.addEventListener('DOMContentLoaded', () => {
-            const localStorageKey = 'user_custom_css';
-            const defaultCssPath = "{{ url_for('static', filename='style.css') }}";
-            const dynamicMainStyleTag = document.getElementById('dynamic-main-style');
+            const localStorageKey = '5chan_user_custom_css';
+            const customUserStyleTag = document.getElementById('custom-user-style');
 
             const customCss = localStorage.getItem(localStorageKey);
 
             if (customCss) {
-                dynamicMainStyleTag.textContent = customCss;
+                customUserStyleTag.textContent = customCss;
             } else {
-                fetch(defaultCssPath)
-                    .then(response => {
-                        if (!response.ok) {
-                            console.error(`Error fetching default CSS: HTTP status ${response.status}`);
-                            return '/* Error loading default CSS */';
-                        }
-                        return response.text();
-                    })
-                    .then(cssContent => {
-                        dynamicMainStyleTag.textContent = cssContent;
-                    })
-                    .catch(error => {
-                        console.error('Network error fetching default CSS:', error);
-                        dynamicMainStyleTag.textContent = '/* Network error loading default CSS */';
-                    });
+                customUserStyleTag.textContent = '';
             }
         });
     </script>
