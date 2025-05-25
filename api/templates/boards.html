@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+    <h2>Welcome to 5chan!</h2>
+    {% if session.get('user_id') %}
+        <p>You are logged in as {{ session.get('username', 'User') }}. Explore existing boards or <a href="{{ url_for('create_board') }}">create a board</a>.</p>
+    {% else %}
+        <p>You are not logged in. <a href="{{ url_for('login') }}">Login</a> to create boards and posts.</p>
+    {% endif %}
+
+    <h3>Available Boards:</h3>
+    {% if boards %}
+        <ul class="board-list">
+            {% for board in boards %}
+                <li>
+                    <h3><a href="{{ url_for('board', board_name=board.name) }}">/{{ board.name }}/</a></h3>
+                    <p>{{ board.description }}</p>
+                    <p>Created by: {{ board.creator_username }} on {{ board.created_at.strftime('%Y-%m-%d') }}</p>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No boards created yet. Be the first to <a href="{{ url_for('create_board') }}">create one</a>!</p>
+    {% endif %}
+{% endblock %}
