@@ -55,7 +55,7 @@ cloudinary.config(
 print("Cloudinary Client initialized.")
 
 app.config['MAIL_SERVER'] = 'mail.theserver.life'
-app.config['MAIL_PORT'] = 587
+app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
