@@ -193,6 +193,9 @@ def create_board():
         if not board_name.isalnum():
             flash("Board name must be alphanumeric (no spaces or special characters).", "error")
             return render_template('create_board.html')
+        if len(board_description) > 100:
+            flash("Description cannot be more than 100 characters long.", "error")
+            return render_template('create_board.html')
         existing_board = boards_collection.find_one({"name": board_name})
         if existing_board:
             flash(f"Board name '/{board_name}/' already exists.", "error")
@@ -493,6 +496,65 @@ def submit_report():
 
     return render_template('report.html', report_subjects=report_subjects)
 
+@app.route('/api/board/<board_name>/edit_description', methods=['POST'])
+def edit_board_description(board_name):
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized: You must be logged in to edit board descriptions."}), 401
+
+    board_obj = boards_collection.find_one({"name": board_name})
+    if not board_obj:
+        return jsonify({"error": f"Board '{board_name}' not found."}), 404
+
+    if session['user_id'] != board_obj['created_by']:
+        return jsonify({"error": "Forbidden: You are not the creator of this board."}), 403
+
+    data = request.get_json()
+    new_description = data.get('description', '').strip()
+
+    if len(new_description) > 100:
+        return jsonify({"error": "Description too long. Maximum 100 characters."}), 400
+
+    try:
+        boards_collection.update_one(
+            {"_id": board_obj['_id']},
+            {"$set": {"description": new_description}}
+        )
+        return jsonify({"message": "Board description updated successfully."}), 200
+    except Exception as e:
+        print(f"Error updating board description: {e}")
+        return jsonify({"error": "Internal server error occurred while updating description."}), 500
+
+@app.route('/api/post/<post_id>/edit_content', methods=['POST'])
+def edit_post_content(post_id):
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized: You must be logged in to edit posts."}), 401
+
+    try:
+        post_obj = posts_collection.find_one({"_id": ObjectId(post_id)})
+    except Exception:
+        return jsonify({"error": "Invalid post ID format."}), 400
+
+    if not post_obj:
+        return jsonify({"error": "Post not found."}), 404
+
+    if session['user_id'] != post_obj['user_id']:
+        return jsonify({"error": "Forbidden: You are not the creator of this post."}), 403
+
+    data = request.get_json()
+    new_content = data.get('content', '').strip()
+
+    if len(new_content) > 75:
+        return jsonify({"error": "Post content too long. Maximum 75 characters."}), 400
+
+    try:
+        posts_collection.update_one(
+            {"_id": post_obj['_id']},
+            {"$set": {"content": new_content}}
+        )
+        return jsonify({"message": "Post content updated successfully."}), 200
+    except Exception as e:
+        print(f"Error updating post content: {e}")
+        return jsonify({"error": "Internal server error occurred while updating post content."}), 500
 
 @app.errorhandler(400)
 def bad_request_error(e):
