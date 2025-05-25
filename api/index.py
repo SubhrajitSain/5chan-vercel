@@ -55,7 +55,7 @@ cloudinary.config(
 print("Cloudinary Client initialized.")
 
 app.config['MAIL_SERVER'] = 'mail.theserver.life'
-app.config['MAIL_PORT'] = 465
+app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
@@ -312,7 +312,7 @@ def login():
             flash(f"You are now logged in as {session['username']}.", "success")
             return redirect(url_for('index'))
         else:
-            flash("Incorrect email or password.", "error")
+            flash("Incorrect email or password. You might have not verified your account in time.", "error")
     return render_template('login.html')
 
 @app.route('/logout')
