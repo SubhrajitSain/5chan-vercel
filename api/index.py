@@ -80,6 +80,9 @@ def board(board_name):
         flash(f"Board '/{board_name}/' does not exist or has been removed.", "error")
         return redirect(url_for('index'))
 
+    creator_user = users_collection.find_one({"_id": ObjectId(board_obj['created_by'])})
+    board_obj['creator_username'] = creator_user['username'] if creator_user else "Anonymous"
+
     posts = list(posts_collection.find({"board_id": board_name}).sort("created_at", -1))
     for post in posts:
         creator_user = users_collection.find_one({"_id": ObjectId(post['user_id'])})
