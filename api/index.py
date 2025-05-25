@@ -541,6 +541,9 @@ def edit_post_content(post_id):
         return jsonify({"error": "Forbidden: You are not the creator of this post."}), 403
 
     data = request.get_json()
+    if not data:
+        return jsonify({"error": "Invalid JSON data in request body."}), 400
+
     new_content = data.get('content', '').strip()
 
     if len(new_content) > 75:
