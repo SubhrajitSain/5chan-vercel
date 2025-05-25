@@ -65,6 +65,14 @@ def index():
         board['creator_username'] = creator_user['username'] if creator_user else "Anonymous"
     return render_template('index.html', boards=boards)
 
+@app.route('/boards')
+def boards():
+    boards = list(boards_collection.find().sort("created_at", -1))
+    for board in boards:
+        creator_user = users_collection.find_one({"_id": ObjectId(board['created_by'])})
+        board['creator_username'] = creator_user['username'] if creator_user else "Anonymous"
+    return render_template('index.html', boards=boards)
+
 @app.route('/board/<board_name>')
 def board(board_name):
     board_obj = boards_collection.find_one({"name": board_name})
