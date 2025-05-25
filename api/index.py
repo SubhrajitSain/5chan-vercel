@@ -166,7 +166,6 @@ def register():
     if 'user_id' in session:
         return redirect(url_for('index'))
 
-    abort(503, description="The email service to send you verification emails is currently experiencing some trouble. You cannot register now, try again later.")
     if request.method == 'POST':
         username = request.form['username'].strip()
         email = request.form['email'].strip()
