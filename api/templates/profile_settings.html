@@ -35,5 +35,10 @@
 
         <button type="submit">Update Password</button>
     </form>
+
+    <form>
+        <label for="logout_button">Logout from 5chan</label>
+        <a id="logout_button" name="logout_button" href="{{ url_for('logout') }}"><button>Logout</button></a>
+    </form>
 </div>
 {% endblock %}
