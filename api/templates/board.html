@@ -36,7 +36,13 @@
                         </p>
                     {% else %}
                         <h3>
-                            <a href="{{ url_for('view_post', post_id=post._id) }}">{{ post.title }}</a>
+                            <a href="{{ url_for('view_post', post_id=post._id) }}">
+                                {% if post.title %}
+                                    {{ post.title }}
+                                {% else %}
+                                    {{ post._id }}
+                                {% endif
+                            </a>
                             {% if post.is_nsfw %}
                                 <span class="nsfw-tag">NSFW</span>
                             {% endif %}
