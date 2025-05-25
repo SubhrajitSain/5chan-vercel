@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, abort
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import uuid
@@ -184,6 +184,7 @@ def logout():
 
 @app.route('/create_board', methods=['GET', 'POST'])
 def create_board():
+    abort(503)
     if 'user_id' not in session:
         flash("You must be logged in to create a board.", "warning")
         return redirect(url_for('login'))
