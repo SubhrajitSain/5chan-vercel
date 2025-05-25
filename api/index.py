@@ -3,13 +3,17 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 import dotenv
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
 from bson.objectid import ObjectId
 import cloudinary
 import cloudinary.uploader
+from flask_mail import Mail, Message
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
+import threading
+import time
 
 dotenv.load_dotenv()
 
@@ -50,8 +54,39 @@ cloudinary.config(
 )
 print("Cloudinary Client initialized.")
 
+app.config['MAIL_SERVER'] = 'mail.theserver.life'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+app.config['MAIL_DEFAULT_SENDER'] = app.config['MAIL_USERNAME']
+
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
+
+mail = Mail(app)
+
+app.config['SECURITY_PASSWORD_SALT'] = dotenv.dotenv_values().get('SECURITY_PASSWORD_SALT', 'a-very-secret-salt-that-you-should-change')
+serializer = URLSafeTimedSerializer(app.secret_key, salt=app.config['SECURITY_PASSWORD_SALT'])
+
+pending_registrations = {}
+REGISTRATION_TIMEOUT_MINUTES = 2
+
+def cleanup_pending_registrations():
+    while True:
+        current_time = datetime.utcnow()
+        keys_to_remove = []
+        for user_id, data in pending_registrations.items():
+            if current_time - data['timestamp'] > timedelta(minutes=REGISTRATION_TIMEOUT_MINUTES):
+                keys_to_remove.append(user_id)
+        for key in keys_to_remove:
+            print(f"Cleaning up expired pending registration for user ID: {key}")
+            del pending_registrations[key]
+        time.sleep(60)
+
+cleanup_thread = threading.Thread(target=cleanup_pending_registrations)
+cleanup_thread.daemon = True
+cleanup_thread.start()
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -128,37 +163,142 @@ def tos():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    if 'user_id' in session:
+        return redirect(url_for('index')) # Already logged in
+
     if request.method == 'POST':
         username = request.form['username'].strip()
         email = request.form['email'].strip()
         password = request.form['password']
-        if not (username and email and password):
+        confirm_password = request.form['confirm_password']
+
+        # Basic validation
+        if not username or not email or not password or not confirm_password:
             flash("All fields are required.", "error")
             return render_template('register.html')
-        existing_user_email = users_collection.find_one({"email": email})
-        if existing_user_email:
-            flash("Email address already in use.", "error")
+        if password != confirm_password:
+            flash("Passwords do not match.", "error")
             return render_template('register.html')
-        existing_user_username = users_collection.find_one({"username": username})
-        if existing_user_username:
-            flash("Username has already been taken.", "error")
+        if len(username) < 3 or len(username) > 20:
+            flash("Username must be between 3 and 20 characters.", "error")
             return render_template('register.html')
+        if len(password) < 6:
+            flash("Password must be at least 6 characters.", "error")
+            return render_template('register.html')
+        if "@" not in email or "." not in email:
+            flash("Please enter a valid email address.", "error")
+            return render_template('register.html')
+
+        if users_collection.find_one({"username": username}):
+            flash("Username already taken. Please choose another.", "error")
+            return render_template('register.html')
+        if users_collection.find_one({"email": email}):
+            flash("Email already registered. Please login or use a different email.", "error")
+            return render_template('register.html')
+
+        for pending_user_id, pending_data in pending_registrations.items():
+            if pending_data['username'] == username:
+                flash("Username is pending verification. Please try again later or verify your email.", "error")
+                return render_template('register.html')
+            if pending_data['email'] == email:
+                flash("Email is pending verification. Please check your inbox or try again later.", "error")
+                return render_template('register.html')
+
+        password_hash = generate_password_hash(password)
+        temp_user_id = str(uuid.uuid4())
+
+        pending_registrations[temp_user_id] = {
+            'email': email,
+            'username': username,
+            'password_hash': password_hash,
+            'timestamp': datetime.utcnow()
+        }
+
+        token = serializer.dumps(temp_user_id, salt='email-confirm')
+
         try:
-            password_hash = generate_password_hash(password)
-            new_user_data = {
-                "email": email,
-                "username": username,
-                "password_hash": password_hash,
-                "created_at": datetime.utcnow()
-            }
-            result = users_collection.insert_one(new_user_data)
-            user_id = str(result.inserted_id)
-            flash("You have been registered successfully. Use your email and password to login.", "success")
+            msg = Message(
+                "Verify Your 5chan Account",
+                recipients=[email],
+                html=render_template('verification_email.html', username=username, token=token, temp_user_id=temp_user_id)
+            )
+            mail.send(msg)
+            flash("A verification email has been sent to your inbox. Please check your email to complete registration. (Valid for 2 minutes)", "success")
             return redirect(url_for('login'))
         except Exception as e:
-            flash(f"An unexpected error occurred during registration: {e}", "error")
-            print(f"Unexpected Exception during registration: {e}")
+            if temp_user_id in pending_registrations:
+                del pending_registrations[temp_user_id]
+            print(f"Error sending verification email: {e}")
+            flash("Failed to send verification email. Please try again later.", "error")
+            return render_template('register.html')
+
     return render_template('register.html')
+
+@app.route('/verify/<temp_user_id>', methods=['GET'])
+def verify_email(temp_user_id):
+    token = request.args.get('token')
+
+    if not token:
+        flash("Verification link is missing a token.", "error")
+        return redirect(url_for('index'))
+
+    try:
+        decoded_temp_user_id = serializer.loads(
+            token,
+            salt='email-confirm',
+            max_age=REGISTRATION_TIMEOUT_MINUTES * 60
+        )
+    except SignatureExpired:
+        if temp_user_id in pending_registrations:
+            del pending_registrations[temp_user_id]
+        flash("Your verification link has expired. Please try registering again.", "error")
+        return redirect(url_for('register'))
+    except BadTimeSignature:
+        flash("Invalid verification link.", "error")
+        return redirect(url_for('index'))
+    except Exception as e:
+        print(f"Error during token deserialization: {e}")
+        flash("An error occurred during verification. Please try again.", "error")
+        return redirect(url_for('index'))
+
+    if decoded_temp_user_id != temp_user_id:
+        flash("Mismatched or invalid verification link or token.", "error")
+        return redirect(url_for('index'))
+
+    if temp_user_id not in pending_registrations:
+        flash("This registration request was not found or has already expired. Please register again.", "error")
+        return redirect(url_for('register'))
+
+    user_data = pending_registrations[temp_user_id]
+
+    if users_collection.find_one({"username": user_data['username']}):
+        flash("Username already taken. Please try again.", "error")
+        del pending_registrations[temp_user_id] # Clean up temp data
+        return redirect(url_for('register'))
+    if users_collection.find_one({"email": user_data['email']}):
+        flash("Email already registered. Please login.", "error")
+        del pending_registrations[temp_user_id] # Clean up temp data
+        return redirect(url_for('login'))
+
+    try:
+        new_user = {
+            '_id': ObjectId(),
+            'username': user_data['username'],
+            'email': user_data['email'],
+            'password': user_data['password_hash'],
+            'created_at': datetime.utcnow()
+        }
+        users_collection.insert_one(new_user)
+
+        del pending_registrations[temp_user_id]
+
+        flash("Email successfully verified! You can now log in.", "success")
+        return redirect(url_for('login'))
+
+    except Exception as e:
+        print(f"Error inserting user into DB after verification: {e}")
+        flash("An error occurred during final registration. Please try again.", "error")
+        return redirect(url_for('register'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
