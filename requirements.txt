@@ -5,3 +5,6 @@ Pillow
 pymongo
 eventlet
 cloudinary
+itsdangerous
+Flask-Mail
+dnspython
