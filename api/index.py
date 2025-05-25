@@ -166,6 +166,7 @@ def register():
     if 'user_id' in session:
         return redirect(url_for('index')) # Already logged in
 
+    abort(503)
     if request.method == 'POST':
         username = request.form['username'].strip()
         email = request.form['email'].strip()
@@ -324,7 +325,6 @@ def logout():
 
 @app.route('/create_board', methods=['GET', 'POST'])
 def create_board():
-    abort(503)
     if 'user_id' not in session:
         flash("You must be logged in to create a board.", "warning")
         return redirect(url_for('login'))
