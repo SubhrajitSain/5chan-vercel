@@ -803,7 +803,7 @@ def forbidden_error(e):
 
     return render_template(
         'error.html',
-        error_code=403
+        error_code=403,
         error_message="Forbidden: You do not have permission to access this resource.",
         ip_info=ip_info,
         request_details=request_details,
@@ -828,7 +828,7 @@ def page_not_found(e):
 
     return render_template(
         'error.html',
-        error_code=404
+        error_code=404,
         error_message="Not Found: The page or resource you are looking for does not exist.",
         ip_info=ip_info,
         request_details=request_details,
@@ -853,7 +853,7 @@ def method_not_allowed_error(e):
 
     return render_template(
         'error.html',
-        error_code=405
+        error_code=405,
         error_message="Method Not Allowed: The requested method is not supported for this URL.",
         ip_info=ip_info,
         request_details=request_details,
@@ -878,7 +878,7 @@ def request_timeout_error(e):
 
     return render_template(
         'error.html',
-        error_code=408
+        error_code=408,
         error_message="Request Timeout: The server timed out waiting for the request.",
         ip_info=ip_info,
         request_details=request_details,
@@ -903,7 +903,7 @@ def request_entity_too_large(e):
 
     return render_template(
         'error.html',
-        error_code=413
+        error_code=413,
         error_message=f"Request Entity Too Large: The file you uploaded is too large. Maximum allowed size is {app.config['MAX_CONTENT_LENGTH'] / (1024 * 1024):.0f}MB.",
         ip_info=ip_info,
         request_details=request_details,
