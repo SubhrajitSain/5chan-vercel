@@ -14,8 +14,6 @@ from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
 import threading
 import time
-import requests
-import json
 
 dotenv.load_dotenv()
 
@@ -89,38 +87,6 @@ def cleanup_pending_registrations():
 cleanup_thread = threading.Thread(target=cleanup_pending_registrations)
 cleanup_thread.daemon = True
 cleanup_thread.start()
-
-def get_ip_info(ip_address):
-    if not ip_address:
-        return {"error": "No IP address provided."}
-
-    url = f"https://ipapi.co/{ip_address}/json/"
-    try:
-        response = requests.get(url, timeout=2)
-        response.raise_for_status()
-        data = response.json()
-        info = {
-            "ip": data.get("ip", "N/A"),
-            "network": data.get("network", "N/A"),
-            "city": data.get("city", "N/A"),
-            "region": data.get("region", "N/A"),
-            "country_name": data.get("country_name", "N/A"),
-            "postal": data.get("postal", "N/A"),
-            "org": data.get("org", "N/A"),
-            "asn": data.get("asn", "N/A"),
-            "latitude": data.get("latitude", "N/A"),
-            "longitude": data.get("longitude", "N/A"),
-            "error": data.get("error", False),
-            "error_reason": data.get("reason", "N/A")
-        }
-        return info
-    except requests.exceptions.RequestException as e:
-        return {"error": f"Could not fetch IP info: {e}"}
-    except json.JSONDecodeError:
-        return {"error": "Invalid JSON response from IP API."}
-    except Exception as e:
-        return {"error": "Unexpected error during IP info lookup."}
-
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -741,8 +707,6 @@ def bad_request_error(e):
     if client_ip:
         client_ip = client_ip.split(',')[0].strip()
 
-    ip_info = get_ip_info(client_ip)
-
     request_details = {
         "path": request.path,
         "method": request.method,
@@ -755,7 +719,6 @@ def bad_request_error(e):
         'error.html',
         error_code=400,
         error_message="Bad Request: The server cannot process the request due to a client error (e.g., malformed syntax).",
-        ip_info=ip_info,
         request_details=request_details,
         exception=e
     ), 400
@@ -765,8 +728,6 @@ def unauthorized_error(e):
     client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     if client_ip:
         client_ip = client_ip.split(',')[0].strip()
-
-    ip_info = get_ip_info(client_ip)
 
     request_details = {
         "path": request.path,
@@ -780,7 +741,6 @@ def unauthorized_error(e):
         'error.html',
         error_code=401,
         error_message="Unauthorized: Authentication is required or has failed. Please log in.",
-        ip_info=ip_info,
         request_details=request_details,
         exception=e
     ), 401
@@ -790,8 +750,6 @@ def forbidden_error(e):
     client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     if client_ip:
         client_ip = client_ip.split(',')[0].strip()
-
-    ip_info = get_ip_info(client_ip)
 
     request_details = {
         "path": request.path,
@@ -805,7 +763,6 @@ def forbidden_error(e):
         'error.html',
         error_code=403,
         error_message="Forbidden: You do not have permission to access this resource.",
-        ip_info=ip_info,
         request_details=request_details,
         exception=e
     ), 403
@@ -815,8 +772,6 @@ def page_not_found(e):
     client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     if client_ip:
         client_ip = client_ip.split(',')[0].strip()
-
-    ip_info = get_ip_info(client_ip)
 
     request_details = {
         "path": request.path,
@@ -830,7 +785,6 @@ def page_not_found(e):
         'error.html',
         error_code=404,
         error_message="Not Found: The page or resource you are looking for does not exist.",
-        ip_info=ip_info,
         request_details=request_details,
         exception=e
     ), 404
@@ -840,8 +794,6 @@ def method_not_allowed_error(e):
     client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     if client_ip:
         client_ip = client_ip.split(',')[0].strip()
-
-    ip_info = get_ip_info(client_ip)
 
     request_details = {
         "path": request.path,
@@ -855,7 +807,6 @@ def method_not_allowed_error(e):
         'error.html',
         error_code=405,
         error_message="Method Not Allowed: The requested method is not supported for this URL.",
-        ip_info=ip_info,
         request_details=request_details,
         exception=e
     ), 405
@@ -865,8 +816,6 @@ def request_timeout_error(e):
     client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     if client_ip:
         client_ip = client_ip.split(',')[0].strip()
-
-    ip_info = get_ip_info(client_ip)
 
     request_details = {
         "path": request.path,
@@ -880,7 +829,6 @@ def request_timeout_error(e):
         'error.html',
         error_code=408,
         error_message="Request Timeout: The server timed out waiting for the request.",
-        ip_info=ip_info,
         request_details=request_details,
         exception=e
     ), 408
@@ -890,8 +838,6 @@ def request_entity_too_large(e):
     client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     if client_ip:
         client_ip = client_ip.split(',')[0].strip()
-
-    ip_info = get_ip_info(client_ip)
 
     request_details = {
         "path": request.path,
@@ -905,7 +851,6 @@ def request_entity_too_large(e):
         'error.html',
         error_code=413,
         error_message=f"Request Entity Too Large: The file you uploaded is too large. Maximum allowed size is {app.config['MAX_CONTENT_LENGTH'] / (1024 * 1024):.0f}MB.",
-        ip_info=ip_info,
         request_details=request_details,
         exception=e
     ), 413
@@ -915,8 +860,6 @@ def internal_server_error(e):
     client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     if client_ip:
         client_ip = client_ip.split(',')[0].strip()
-
-    ip_info = get_ip_info(client_ip)
 
     request_details = {
         "path": request.path,
@@ -930,7 +873,6 @@ def internal_server_error(e):
         'error.html',
         error_code=500,
         error_message="Internal Server Error: An unexpected server error occurred. We're working to fix it!",
-        ip_info=ip_info,
         request_details=request_details,
         exception=e
     ), 500
@@ -940,8 +882,6 @@ def bad_gateway_error(e):
     client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     if client_ip:
         client_ip = client_ip.split(',')[0].strip()
-
-    ip_info = get_ip_info(client_ip)
 
     request_details = {
         "path": request.path,
@@ -955,7 +895,6 @@ def bad_gateway_error(e):
         'error.html',
         error_code=502,
         error_message="Bad Gateway: The server received an invalid response from an upstream server.",
-        ip_info=ip_info,
         request_details=request_details,
         exception=e
     ), 502
@@ -965,8 +904,6 @@ def service_unavailable_error(e):
     client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     if client_ip:
         client_ip = client_ip.split(',')[0].strip()
-
-    ip_info = get_ip_info(client_ip)
 
     request_details = {
         "path": request.path,
@@ -980,7 +917,6 @@ def service_unavailable_error(e):
         'error.html',
         error_code=503,
         error_message=f"Service Unavailable: {e.description}",
-        ip_info=ip_info,
         request_details=request_details,
         exception=e
     ), 503
