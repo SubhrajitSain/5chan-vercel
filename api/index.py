@@ -70,7 +70,7 @@ app.config['SECURITY_PASSWORD_SALT'] = dotenv.dotenv_values().get('SECURITY_PASS
 serializer = URLSafeTimedSerializer(app.secret_key, salt=app.config['SECURITY_PASSWORD_SALT'])
 
 pending_registrations = {}
-REGISTRATION_TIMEOUT_MINUTES = 2
+REGISTRATION_TIMEOUT_MINUTES = 5
 
 def cleanup_pending_registrations():
     while True:
@@ -222,7 +222,7 @@ def register():
                 html=render_template('verification_email.html', username=username, token=token, temp_user_id=temp_user_id)
             )
             mail.send(msg)
-            flash("A verification email has been sent to your inbox. Please check your email to complete registration. (Valid for 2 minutes)", "success")
+            flash(f"Verification email has been sent. Please erify within {REGISTRATION_TIMEOUT_MINUTES} minutes.", "success")
             return redirect(url_for('login'))
         except Exception as e:
             if temp_user_id in pending_registrations:
@@ -238,7 +238,7 @@ def verify_email(temp_user_id):
     token = request.args.get('token')
 
     if not token:
-        flash("Verification link is missing a token.", "error")
+        flash("Invalid verification link: No verification token.", "error")
         return redirect(url_for('index'))
 
     try:
@@ -272,11 +272,11 @@ def verify_email(temp_user_id):
 
     if users_collection.find_one({"username": user_data['username']}):
         flash("Username already taken. Please try again.", "error")
-        del pending_registrations[temp_user_id] # Clean up temp data
+        del pending_registrations[temp_user_id]
         return redirect(url_for('register'))
     if users_collection.find_one({"email": user_data['email']}):
         flash("Email already registered. Please login.", "error")
-        del pending_registrations[temp_user_id] # Clean up temp data
+        del pending_registrations[temp_user_id]
         return redirect(url_for('login'))
 
     try:
@@ -291,12 +291,12 @@ def verify_email(temp_user_id):
 
         del pending_registrations[temp_user_id]
 
-        flash("Email successfully verified! You can now log in.", "success")
+        flash("Email successfully verified and account created. You can now log in.", "success")
         return redirect(url_for('login'))
 
     except Exception as e:
         print(f"Error inserting user into DB after verification: {e}")
-        flash("An error occurred during final registration. Please try again.", "error")
+        flash("You email has been verified, but failed to create your account.", "error")
         return redirect(url_for('register'))
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -311,7 +311,7 @@ def login():
             flash(f"You are now logged in as {session['username']}.", "success")
             return redirect(url_for('index'))
         else:
-            flash("Incorrect email or password. You might have not verified your account in time.", "error")
+            flash("Incorrect email or password, or account is not registered.", "error")
     return render_template('login.html')
 
 @app.route('/logout')
