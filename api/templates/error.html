@@ -12,34 +12,13 @@
         <li>If you reached this page from a broken link, please let us know.</li>
     </ul>
     
-    {% if exception or ip_info or request_details %}
+    {% if exception or request_details %}
         <p class="debug-info-note">The following information is for debugging purposes:</p>
     
         {% if exception %}
         <details>
             <summary>Detailed Server Error</summary>
             <pre>{{ exception }}</pre>
-        </details>
-        {% endif %}
-    
-        {% if ip_info %}
-        <details>
-            <summary>Your IP Information</summary>
-            <ul>
-                <li><strong>IP Address:</strong> {{ ip_info.ip if ip_info.ip else 'N/A' }}</li>
-                <li><strong>Network:</strong> {{ ip_info.network if ip_info.network else 'N/A' }}</li>
-                <li><strong>City:</strong> {{ ip_info.city if ip_info.city else 'N/A' }}</li>
-                <li><strong>Region:</strong> {{ ip_info.region if ip_info.region else 'N/A' }}</li>
-                <li><strong>Country:</strong> {{ ip_info.country_name if ip_info.country_name else 'N/A' }}</li>
-                <li><strong>Postal Code:</strong> {{ ip_info.postal if ip_info.postal else 'N/A' }}</li>
-                <li><strong>Organization (ISP):</strong> {{ ip_info.org if ip_info.org else 'N/A' }}</li>
-                <li><strong>ASN:</strong> {{ ip_info.asn if ip_info.asn else 'N/A' }}</li>
-                <li><strong>Latitude:</strong> {{ ip_info.latitude if ip_info.latitude else 'N/A' }}</li>
-                <li><strong>Longitude:</strong> {{ ip_info.longitude if ip_info.longitude else 'N/A' }}</li>
-                {% if ip_info.error %}
-                <li><strong>IP lookup error occured, reason:</strong> {{ ip_info.error_reason }}</li>
-                {% endif %}
-            </ul>
         </details>
         {% endif %}
     
