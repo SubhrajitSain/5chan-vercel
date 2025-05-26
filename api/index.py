@@ -100,16 +100,17 @@ def get_ip_info(ip_address):
         response.raise_for_status()
         data = response.json()
         info = {
-            "ip": data.get("ip"),
-            "network": data.get("network"),
-            "city": data.get("city"),
-            "region": data.get("region"),
-            "country_name": data.get("country_name"),
-            "postal": data.get("postal"),
-            "org": data.get("org"),
-            "asn": data.get("asn"),
-            "latitude": data.get("latitude"),
-            "longitude": data.get("longitude")
+            "ip": data.get("ip", "N/A"),
+            "network": data.get("network", "N/A"),
+            "city": data.get("city", "N/A"),
+            "region": data.get("region", "N/A"),
+            "country_name": data.get("country_name", "N/A"),
+            "postal": data.get("postal", "N/A"),
+            "org": data.get("org", "N/A"),
+            "asn": data.get("asn", "N/A"),
+            "latitude": data.get("latitude", "N/A"),
+            "longitude": data.get("longitude", "N/A"),
+            "error": data.get("error", False),
         }
         return info
     except requests.exceptions.RequestException as e:
