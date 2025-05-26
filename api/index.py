@@ -778,7 +778,7 @@ def unauthorized_error(e):
 
     return render_template(
         'error.html',
-        error_code=401
+        error_code=401,
         error_message="Unauthorized: Authentication is required or has failed. Please log in.",
         ip_info=ip_info,
         request_details=request_details,
