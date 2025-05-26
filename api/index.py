@@ -219,7 +219,7 @@ def register():
             msg = Message(
                 "Verify Your 5chan Account",
                 recipients=[email],
-                html=render_template('verification_email.html', username=username, token=token, temp_user_id=temp_user_id)
+                html=render_template('verification_email.html', username=username, token=token, temp_user_id=temp_user_id, time_to_verify_mins=REGISTRATION_TIMEOUT_MINUTES)
             )
             mail.send(msg)
             flash(f"Verification email has been sent. Please erify within {REGISTRATION_TIMEOUT_MINUTES} minutes.", "success")
