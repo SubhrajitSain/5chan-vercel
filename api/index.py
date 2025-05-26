@@ -111,6 +111,7 @@ def get_ip_info(ip_address):
             "latitude": data.get("latitude", "N/A"),
             "longitude": data.get("longitude", "N/A"),
             "error": data.get("error", False),
+            "error_reason": data.get("reason", "N/A")
         }
         return info
     except requests.exceptions.RequestException as e:
