@@ -37,7 +37,7 @@
                 <li><strong>Latitude:</strong> {{ ip_info.latitude if ip_info.latitude else 'N/A' }}</li>
                 <li><strong>Longitude:</strong> {{ ip_info.longitude if ip_info.longitude else 'N/A' }}</li>
                 {% if ip_info.error %}
-                <li><strong>IP lookup error occured.</strong></li>
+                <li><strong>IP lookup error occured, reason:</strong> {{ ip_info.error_reason }}</li>
                 {% endif %}
             </ul>
         </details>
