@@ -8,3 +8,4 @@ cloudinary
 itsdangerous
 Flask-Mail
 dnspython
+requests
