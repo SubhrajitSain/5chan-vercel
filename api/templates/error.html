@@ -3,13 +3,69 @@
 {% block title %}Error {{ error_code }}{% endblock %}
 
 {% block content %}
-<section class="error-section">
+<div>
     <h2>Error {{ error_code }}</h2>
-    <p>{{ error_message }}</p>
+    <p class="error-details-msg">{{ error_message }}</p>
     <p>We apologize for the inconvenience. Please try one of the following:</p>
     <ul>
-        <li><a href="{{ url_for('index') }}">Homepage</a></li>
+        <li><a href="{{ url_for('index') }}">Retrun to homepage</a>.</li>
         <li>If you reached this page from a broken link, please let us know.</li>
     </ul>
-</section>
+    
+    {% if exception or ip_info or request_details %}
+        <p class="debug-info-note">The following information is for debugging purposes and may not be available in production.</p>
+    
+        {% if exception %}
+        <details>
+            <summary>Detailed Server Error</summary>
+            <pre>{{ exception }}</pre>
+        </details>
+        {% endif %}
+    
+        {% if ip_info %}
+        <details>
+            <summary>Your IP Information</summary>
+            <ul>
+                <li><strong>IP Address:</strong> {{ ip_info.ip if ip_info.ip else 'N/A' }}</li>
+                <li><strong>Network:</strong> {{ ip_info.network if ip_info.network else 'N/A' }}</li>
+                <li><strong>City:</strong> {{ ip_info.city if ip_info.city else 'N/A' }}</li>
+                <li><strong>Region:</strong> {{ ip_info.region if ip_info.region else 'N/A' }}</li>
+                <li><strong>Country:</strong> {{ ip_info.country_name if ip_info.country_name else 'N/A' }}</li>
+                <li><strong>Postal Code:</strong> {{ ip_info.postal if ip_info.postal else 'N/A' }}</li>
+                <li><strong>Organization (ISP):</strong> {{ ip_info.org if ip_info.org else 'N/A' }}</li>
+                <li><strong>ASN:</strong> {{ ip_info.asn if ip_info.asn else 'N/A' }}</li>
+                <li><strong>Latitude:</strong> {{ ip_info.latitude if ip_info.latitude else 'N/A' }}</li>
+                <li><strong>Longitude:</strong> {{ ip_info.longitude if ip_info.longitude else 'N/A' }}</li>
+                {% if ip_info.error %}
+                <li><strong>IP lookup error occured.</strong></li>
+                {% endif %}
+            </ul>
+        </details>
+        {% endif %}
+    
+        {% if request_details %}
+        <details>
+            <summary>Request Details</summary>
+            <p><strong>Path:</strong> {{ request_details.path if request_details.path else 'N/A' }}</p>
+            <p><strong>Method:</strong> {{ request_details.method if request_details.method else 'N/A' }}</p>
+            <details>
+                <summary>Headers</summary>
+                <pre>{{ request_details.headers | tojson(indent=2) }}</pre>
+            </details>
+            {% if request_details.form_data %}
+            <details>
+                <summary>Form Data</summary>
+                <pre>{{ request_details.form_data | tojson(indent=2) }}</pre>
+            </details>
+            {% endif %}
+            {% if request_details.json_data %}
+            <details>
+                <summary>JSON Data</summary>
+                <pre>{{ request_details.json_data | tojson(indent=2) }}</pre>
+            </details>
+            {% endif %}
+        </details>
+        {% endif %}
+    {% endif %}
+</div>
 {% endblock %}
