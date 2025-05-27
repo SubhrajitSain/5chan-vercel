@@ -389,21 +389,6 @@ def profile_settings():
                 except Exception as e:
                     flash(f"Error updating username: {e}", "error")
 
-        new_email = request.form.get('email_new_email', '').strip()
-        if new_email and new_email != user['email']:
-            if users_collection.find_one({"email": new_email}):
-                flash("Email already registered by another user.", "error")
-            else:
-                try:
-                    users_collection.update_one(
-                        {"_id": ObjectId(user_id)},
-                        {"$set": {"email": new_email}}
-                    )
-                    flash("Email updated successfully.", "success")
-                    user['email'] = new_email
-                except Exception as e:
-                    flash(f"Error updating email: {e}", "error")
-
         current_password = request.form.get('password_current_password')
         new_password = request.form.get('password_new_password')
         confirm_password = request.form.get('password_confirm_password')
