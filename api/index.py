@@ -284,8 +284,9 @@ def verify_email(temp_user_id):
             '_id': ObjectId(),
             'username': user_data['username'],
             'email': user_data['email'],
-            'password': user_data['password_hash'],
-            'created_at': datetime.utcnow()
+            'password_hash': user_data['password_hash'],
+            'created_at': datetime.utcnow(),
+            'is_verified': True
         }
         users_collection.insert_one(new_user)
 
@@ -296,7 +297,9 @@ def verify_email(temp_user_id):
 
     except Exception as e:
         print(f"Error inserting user into DB after verification: {e}")
-        flash("You email has been verified, but failed to create your account.", "error")
+        if temp_user_id in pending_registrations:
+            del pending_registrations[temp_user_id]
+        flash("Your email has been verified, but failed to create your account.", "error")
         return redirect(url_for('register'))
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -304,14 +307,23 @@ def login():
     if request.method == 'POST':
         email = request.form['email'].strip()
         password = request.form['password']
+        
         user = users_collection.find_one({"email": email})
-        if user and check_password_hash(user['password_hash'], password):
-            session['user_id'] = str(user['_id'])
-            session['username'] = user['username']
-            flash(f"You are now logged in as {session['username']}.", "success")
-            return redirect(url_for('index'))
+        
+        if user:
+            if 'password_hash' in user: 
+                if check_password_hash(user['password_hash'], password):
+                    session['user_id'] = str(user['_id'])
+                    session['username'] = user['username']
+                    flash(f"You are now logged in as {session['username']}.", "success")
+                    return redirect(url_for('index'))
+                else:
+                    flash("Incorrect password.", "error") 
+            else:
+                flash("User account data is incomplete or corrupted. Please contact us.", "error")
+                print(f"ERROR: User {user.get('username', user.get('_id'))} (ID: {user.get('_id')}) found but has no 'password_hash' field.")
         else:
-            flash("Incorrect email or password, or account is not registered.", "error")
+            flash("Account not found with the specified email.", "error")
     return render_template('login.html')
 
 @app.route('/logout')
