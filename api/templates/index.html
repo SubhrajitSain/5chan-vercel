@@ -3,9 +3,9 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-    <h2>Welcome to 5chan!</h2>
     {% if session.get('user_id') %}
-        <p>You are logged in as {{ session.get('username', 'User') }}. Explore existing boards or <a href="{{ url_for('create_board') }}">create a board</a>.</p>
+        <h2>Hi, {{ session.get('username', '[Unknown username! Please report this bug.]') }}!</h2>
+        <p>You can explore these boards or <a href="{{ url_for('create_board') }}">create a board yourself</a>.</p>
 
         <h3>Available Boards:</h3>
         {% if boards %}
@@ -22,6 +22,7 @@
             <p>No boards created yet. Be the first to <a href="{{ url_for('create_board') }}">create one</a>!</p>
         {% endif %}
     {% else %}
+        <h2>Hi! Welcome to the 5chan community.</h2>
         <p>Join our community by <a href="{{ url_for('register') }}">registering</a> or <a href="{{ url_for('login') }}">logging in</a>.</p>
         <p>Useful links:</p>
         <ul>
