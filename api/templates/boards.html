@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Home{% endblock %}
+{% block title %}Boards{% endblock %}
 
 {% block content %}
-    <h2>Welcome to 5chan!</h2>
+    <h2>These are the current boards on 5chan</h2>
     {% if session.get('user_id') %}
-        <p>You are logged in as {{ session.get('username', 'User') }}. Explore existing boards or <a href="{{ url_for('create_board') }}">create a board</a>.</p>
+        <p>You are logged in as {{ session.get('username', 'User') }}. This is a preview page. Please head to the <a href="{{ url_for('index') }}">home page</a>.</p>
     {% else %}
-        <p>You are not logged in. <a href="{{ url_for('login') }}">Login</a> to create boards and posts.</p>
+        <p>You are not logged in. This is a preview page.</p>
     {% endif %}
 
     <h3>Available Boards:</h3>
