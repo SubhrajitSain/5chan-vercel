@@ -333,6 +333,10 @@ def logout():
     flash("You have been logged out.", "info")
     return redirect(url_for('index'))
 
+@app.route('/donate')
+def donate():
+    return render_template('donate.html')
+
 @app.route('/create_board', methods=['GET', 'POST'])
 def create_board():
     if 'user_id' not in session:
