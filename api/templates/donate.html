@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }}{% endblock %}
+
+{% block content %}
+<div>
+    <div class="post-detail">
+        <h2>
+              Donate
+        </h2>
+
+        <div id="post-content-display">
+            <p class="post-content-full">Donate to 5chan by buying 5CHN coin on rugplay <a href="https://rugplay.com/coin/5CHN">here</a>.</p>
+        </div>
+
+        <img src="{{ url_for('static', filename='donate.jpg') }}" alt="Failed to load posted image." class="post-image-full">
+    </div>
+</div>
+{% endblock %}
